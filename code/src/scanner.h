@@ -1,3 +1,5 @@
+#ifndef SEA_SCANNER_H
+#define SEA_SCANNER_H
 typedef enum{
 
     TOKEN_INTEGER,
@@ -27,3 +29,5 @@ typedef struct{
 void initScanner(const char* buffer);
 
 Token scanToken();
+
+#endif
