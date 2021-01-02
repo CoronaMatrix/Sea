@@ -22,8 +22,6 @@ void initScanner(const char *buffer){
     lineNumber = 1;
 }
 
-
-
 static Token makeToken(TokenType type, int line, TokenValue value){
     Token token = {
         type, line, value
@@ -48,7 +46,11 @@ static Token scanNumber(){
     TokenValue value;
     if(overflow) value.number = INT_MAX;
     else value.number = result;
-    return makeToken(TOKEN_INTEGER, lineNumber, value);
+    Token token = {
+        TOKEN_INTEGER, lineNumber, value
+    };
+
+    return token;
 }
 
 
@@ -81,6 +83,9 @@ Token scanToken(){
 
         case ')':
             return makeToken(TOKEN_CLOSE_PAREN, lineNumber, value);
+
+        case ';':
+            return makeToken(TOKEN_SEMICOLON, lineNumber, value);
 
         default:
             return scanNumber();

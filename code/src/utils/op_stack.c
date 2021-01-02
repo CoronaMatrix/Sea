@@ -19,6 +19,9 @@ void freeOpStack(OpStack *opStack){
     opStack->count = 0;
 }
 
+uint8_t peekOp(OpStack* opStack){
+    return opStack->operators[opStack->count - 1];
+}
 
 void pushOp(OpStack *opStack, uint8_t op){
     if(opStack->capacity < opStack->count + 1){

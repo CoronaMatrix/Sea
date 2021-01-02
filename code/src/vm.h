@@ -5,12 +5,12 @@
 #include "utils/value_stack.h"
 
 typedef enum{
-    OP_ADD,
-    OP_MINUS,
-    OP_MULTIPLY,
-    OP_DIVIDE,
-    OP_PRINT,
-    OP_MODULO
+    OP_ADD = 0,
+    OP_MINUS = 1,
+    OP_DIVIDE = 2,
+    OP_MULTIPLY = 3,
+    OP_MODULO = 4,
+    OP_PRINT = 5
 } OpCode;
 
 typedef struct{

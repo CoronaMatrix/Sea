@@ -2,14 +2,16 @@
 #define SEA_SCANNER_H
 typedef enum{
 
-    TOKEN_INTEGER,
-    TOKEN_PLUS,
-    TOKEN_MINUS,
-    TOKEN_SLASH,
-    TOKEN_STAR,
-    TOKEN_MODULO,
-    TOKEN_OPEN_PAREN,
-    TOKEN_CLOSE_PAREN
+
+    TOKEN_PLUS = 0,
+    TOKEN_MINUS = 1,
+    TOKEN_SLASH = 2,
+    TOKEN_STAR = 3,
+    TOKEN_MODULO = 4,
+    TOKEN_OPEN_PAREN = 5,
+    TOKEN_CLOSE_PAREN = 6,
+    TOKEN_INTEGER = 7,
+    TOKEN_SEMICOLON = 8
 
 
 } TokenType;
@@ -29,7 +31,6 @@ typedef struct{
 } Token;
 
 void initScanner(const char* buffer);
-
 Token scanToken();
 
 #endif

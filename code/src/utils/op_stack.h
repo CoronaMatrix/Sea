@@ -11,6 +11,7 @@ typedef struct{
 void initOpStack(OpStack* opStack);
 void freeOpStack(OpStack* opStack);
 void pushOp(OpStack* opStack, uint8_t op);
+uint8_t peekOp(OpStack* opStack);
 uint8_t popOp(OpStack* opStack);
 
 #endif

@@ -32,6 +32,7 @@ static void add(ValueStack* valueStack){
     }else{
         printf("RE: Operands must be of type integers\n");
     }
+
 }
 
 static void minus(ValueStack* valueStack){
@@ -53,6 +54,7 @@ static void multiply(ValueStack* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
+    printf("mult %d %d\n", a.as.iNumber, b.as.iNumber);
     if(!(a.type + b.type)){
         // both are integers
         Value value;
@@ -85,7 +87,7 @@ static void print(ValueStack* valueStack){
 }
 
 FuncOp funcs[] = {
-    add, minus, multiply, divide, print
+    add, minus, divide, multiply, NULL, print
 };
 
 void run(VM *vm, OpCode code){
