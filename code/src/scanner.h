@@ -8,6 +8,8 @@ typedef enum{
     TOKEN_SLASH,
     TOKEN_STAR,
     TOKEN_MODULO,
+    TOKEN_OPEN_PAREN,
+    TOKEN_CLOSE_PAREN
 
 
 } TokenType;

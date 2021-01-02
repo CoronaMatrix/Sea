@@ -65,7 +65,6 @@ Token scanToken(){
             return makeToken(TOKEN_PLUS, lineNumber, value);
 
         case '-':
-            
             return makeToken(TOKEN_MINUS, lineNumber, value);
 
         case '*':
@@ -76,6 +75,12 @@ Token scanToken(){
 
         case '%':
             return makeToken(TOKEN_MODULO, lineNumber, value);
+
+        case '(':
+            return makeToken(TOKEN_OPEN_PAREN, lineNumber, value);
+
+        case ')':
+            return makeToken(TOKEN_CLOSE_PAREN, lineNumber, value);
 
         default:
             return scanNumber();

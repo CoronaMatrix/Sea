@@ -2,9 +2,6 @@
 #define SEA_OP_STACK_H
 
 #include <stdint.h>
-#define INITIAL_CAPACITY 4
-#define GROW_FACTOR 2
-
 typedef struct{
    uint8_t *operators;
    int count;
