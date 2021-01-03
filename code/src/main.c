@@ -2,7 +2,6 @@
 #include "compiler.h"
 
 int main(){
-    //TODO - unary is not working
-    compile("-(3-1);");
+    compile("2 + 3;");
     return 0;
 }

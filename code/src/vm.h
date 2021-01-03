@@ -10,7 +10,8 @@ typedef enum{
     OP_DIVIDE = 2,
     OP_MULTIPLY = 3,
     OP_MODULO = 4,
-    OP_PRINT = 5
+    OP_U_MINUS = 5,
+    OP_PRINT = 6
 } OpCode;
 
 typedef struct{

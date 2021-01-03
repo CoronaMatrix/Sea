@@ -50,6 +50,18 @@ static void minus(ValueStack* valueStack){
     }
 
 }
+static void u_minus(ValueStack* valueStack){
+    Value a = popValue(valueStack);
+    if(!a.type){
+        // number is integer
+        Value value;
+        value.type = INTEGER;
+        value.as.iNumber = -(a.as.iNumber);
+        pushValue(valueStack, value);
+    }else{
+        printf("RE: Operand must be of type integer\n");
+    }
+}
 static void multiply(ValueStack* valueStack){
 
     Value b = popValue(valueStack);
@@ -87,7 +99,7 @@ static void print(ValueStack* valueStack){
 }
 
 FuncOp funcs[] = {
-    add, minus, divide, multiply, NULL, print
+    add, minus, divide, multiply, NULL,u_minus, print
 };
 
 void run(VM *vm, OpCode code){

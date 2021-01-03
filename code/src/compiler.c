@@ -11,12 +11,14 @@ typedef enum{
     PLUS = 0,
     MINUS = 0,
     MULTIPLY = 1,
-    DIVIDE = 1
+    DIVIDE = 1,
+    MODULO = 1,
+    U_MINUS = 2
 } OpPrec;
 
 typedef void (*ParseFun)();
 
-OpPrec precendence[] = {PLUS, MINUS, DIVIDE, MULTIPLY};
+OpPrec precendence[] = {PLUS, MINUS, DIVIDE, MULTIPLY, MODULO, U_MINUS};
 
 Token currentToken;
 
@@ -37,6 +39,21 @@ static void floatNumber(){
 
 static void string(){
 
+}
+
+static void unaryOp(){
+    if(opStack.count == 0){
+        pushOp(&opStack, currentToken.type);
+    }else{
+
+        uint8_t stackOp = peekOp(&opStack);
+        if(stackOp != TOKEN_OPEN_PAREN && (precendence[stackOp] > precendence[currentToken.type])){
+            run(&vm, popOp(&opStack));
+        }else{
+            pushOp(&opStack, currentToken.type);
+        }
+
+    }
 }
 
 static void binaryOp(){
@@ -70,6 +87,7 @@ ParseFun parse[] = {
     [TOKEN_SLASH] = binaryOp,
     [TOKEN_STAR] = binaryOp,
     [TOKEN_MODULO] = binaryOp,
+    [TOKEN_U_MINUS] = unaryOp,
     [TOKEN_OPEN_PAREN] = openParen,
     [TOKEN_CLOSE_PAREN] = closeParen,
     [TOKEN_INTEGER] = intNumber

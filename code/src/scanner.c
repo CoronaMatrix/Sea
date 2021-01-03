@@ -5,6 +5,7 @@
 
 const char* source;
 int lineNumber;
+int previousToken = -1;
 
 static int isDigit(char c){
     return c > '/' && c < ':';
@@ -50,6 +51,8 @@ static Token scanNumber(){
         TOKEN_INTEGER, lineNumber, value
     };
 
+    previousToken = TOKEN_INTEGER; 
+
     return token;
 }
 
@@ -64,27 +67,39 @@ Token scanToken(){
     switch(*source){
 
         case '+':
+            previousToken = TOKEN_PLUS;
             return makeToken(TOKEN_PLUS, lineNumber, value);
 
         case '-':
+            if(previousToken == TOKEN_OPEN_PAREN || previousToken == -1){
+                previousToken = TOKEN_U_MINUS;
+                return makeToken(TOKEN_U_MINUS, lineNumber, value);
+            }
+            previousToken = TOKEN_MINUS;
             return makeToken(TOKEN_MINUS, lineNumber, value);
 
         case '*':
+            previousToken = TOKEN_STAR;
             return makeToken(TOKEN_STAR, lineNumber, value);
 
         case '/':
+            previousToken = TOKEN_SLASH;
             return makeToken(TOKEN_SLASH, lineNumber, value);
 
         case '%':
+            previousToken = TOKEN_MODULO;
             return makeToken(TOKEN_MODULO, lineNumber, value);
 
         case '(':
+            previousToken = TOKEN_OPEN_PAREN;
             return makeToken(TOKEN_OPEN_PAREN, lineNumber, value);
 
         case ')':
+            previousToken = TOKEN_CLOSE_PAREN;
             return makeToken(TOKEN_CLOSE_PAREN, lineNumber, value);
 
         case ';':
+            previousToken = TOKEN_SEMICOLON;
             return makeToken(TOKEN_SEMICOLON, lineNumber, value);
 
         default:

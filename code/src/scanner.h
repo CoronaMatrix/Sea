@@ -8,10 +8,11 @@ typedef enum{
     TOKEN_SLASH = 2,
     TOKEN_STAR = 3,
     TOKEN_MODULO = 4,
-    TOKEN_OPEN_PAREN = 5,
-    TOKEN_CLOSE_PAREN = 6,
-    TOKEN_INTEGER = 7,
-    TOKEN_SEMICOLON = 8
+    TOKEN_U_MINUS = 5,
+    TOKEN_OPEN_PAREN = 6,
+    TOKEN_CLOSE_PAREN = 7,
+    TOKEN_INTEGER = 8,
+    TOKEN_SEMICOLON = 9
 
 
 } TokenType;
