@@ -19,15 +19,45 @@ void freeVm(VM* vm){
 }
 
 int truth(Value* a, Value* b){
-    if(!(a->type + b->type)){
-        // both numbers are integers
+    uint8_t vType = a->type + b->type;
+    if(!vType || vType == 2){
+        // both numbers are integers or bools
        return a->as.iNumber == b->as.iNumber; 
+    }else if(vType == 4){
+        // both numbers are floats
+        return a->as.fNumber == b->as.fNumber;
+    }else if(a->type == BOOL){
+        if(b->type == FLOAT) return a->as.iNumber == !!b->as.fNumber;
+        return !!a->as.iNumber == !!b->as.iNumber;
+        
+    }else if(b->type == BOOL){
+        if(a->type == FLOAT) return !!a->as.fNumber == b->as.iNumber;
+        return !!a->as.iNumber == !!b->as.iNumber;
+    }else if(!a->type){
+        return (float)a->as.iNumber == b->as.fNumber;
+    }else if(!b->type){
+        return a->as.fNumber == (float)b->as.iNumber;
     }
     // TODO: check for other types also
     // ex: int == double (convert int to double),
     // bool == int | double (convert int | double to bool)
     return 0;
 }
+
+int falsy(Value* a){
+    if(a->type < 2){
+        // bool and integer
+        return !a->as.iNumber;
+    }else if(a->type == 2){
+        // float
+        return !a->as.fNumber;
+    }
+    // TODO: handle strings
+    return 0;
+}
+     
+
+
 
 static void left_shift(ValueStack* valueStack){
 
@@ -36,9 +66,12 @@ static void left_shift(ValueStack* valueStack){
 
     if(!(a.type + b.type)){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber << b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber << b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
@@ -52,12 +85,33 @@ static void right_shift(ValueStack* valueStack){
 
     if(!(a.type + b.type)){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber >> b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber >> b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+    }
+}
+
+static void bitwise_not(ValueStack* valueStack){
+    Value a = popValue(valueStack);
+    if(!a.type){
+        // Operand is integer
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = ~a.as.iNumber
+            }
+        };
+
+        pushValue(valueStack, value);
+
+    }else{
+        printf("RE: Operand must be of type integer\n");
     }
 }
 
@@ -68,9 +122,12 @@ static void bitwise_or(ValueStack* valueStack){
 
     if(!(a.type + b.type)){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber | b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber | b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
@@ -84,9 +141,12 @@ static void bitwise_xor(ValueStack* valueStack){
 
     if(!(a.type + b.type)){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber ^ b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber ^ b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
@@ -98,11 +158,15 @@ static void bitwise_and(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
+
     if(!(a.type + b.type)){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber & b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber & b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
@@ -114,41 +178,115 @@ static void add(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    if(!(a.type + b.type)){
+    uint8_t vType = a.type + b.type;
+
+    if(!vType){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber + b.as.iNumber;
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber + b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
-    }else{
-        printf("RE: Operands must be of type integers\n");
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            FLOAT,
+            {
+                .fNumber = a.as.fNumber + b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(a.type == BOOL || b.type == BOOL){
+        // both are bools
+        printf("RE+: operands must be of type numbers\n");
+    }else if(!a.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.iNumber + b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.fNumber + b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
     }
 
 }
 
 static void minus(ValueStack* valueStack){
-
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
-    if(!(a.type + b.type)){
+
+    uint8_t vType = a.type + b.type;
+
+    if(!vType){
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber - b.as.iNumber;
-        printf("min: %d\n", value.as.iNumber);
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber - b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
-    }else{
-        printf("RE: Operands must be of type integers\n");
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            FLOAT,
+            {
+                .fNumber = a.as.fNumber - b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(a.type == BOOL || b.type == BOOL){
+        // both are bools
+        printf("RE: operands must be of type numbers\n");
+    }else if(!a.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.iNumber - b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.fNumber - b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
     }
+
 
 }
 static void u_minus(ValueStack* valueStack){
     Value a = popValue(valueStack);
     if(!a.type){
         // number is integer
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = -(a.as.iNumber);
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = -(a.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(a.type == FLOAT){
+        // number is a float
+        Value value = {
+            FLOAT,
+            {
+                .fNumber = -(a.as.fNumber)
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operand must be of type integer\n");
@@ -156,37 +294,63 @@ static void u_minus(ValueStack* valueStack){
 }
 
 static void u_not(ValueStack* valueStack){
-
     Value a = popValue(valueStack);
-    if(a.type == BOOL){
-        // TODO: support integers and doubles and strings
-        // number is BOOL 
-        Value value;
-        value.type = BOOL;
-        // TODO: create a separate function for falsyness
-        value.as.iNumber = a.as.iNumber == 0 ? 1 : 0;
-        pushValue(valueStack, value);
-    }else{
-        printf("RE: Operand must be of type integer\n");
-    }
-
+    Value value = {
+        BOOL,
+        {
+            .iNumber = falsy(&a)
+        }
+    };
+    pushValue(valueStack, value);
 }
+
+
 
 
 static void multiply(ValueStack* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
-    if(!(a.type + b.type)){
+
+    uint8_t vType = a.type + b.type;
+
+    if(!vType){
         // both are integers
-        
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber * b.as.iNumber;
-        printf("mul: %d\n", value.as.iNumber);
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber * b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
-    }else{
-        printf("RE: Operands must be of type integers\n");
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            FLOAT,
+            {
+                .fNumber = a.as.fNumber * b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(a.type == BOOL || b.type == BOOL){
+        // both are bools
+        printf("RE: operands must be of type numbers\n");
+    }else if(!a.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.iNumber * b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.fNumber * b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
     }
 
 }
@@ -194,15 +358,48 @@ static void divide(ValueStack* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
-    if(!(a.type + b.type)){
+
+    uint8_t vType = a.type + b.type;
+
+    if(!vType){
+        // TODO: When dividing two integers produces a floating point then convert any one to the float and save it into float like 4/3 == 1.-- not 1
         // both are integers
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber / b.as.iNumber;
-        printf("div: %d\n", value.as.iNumber);
+
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber / b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
-    }else{
-        printf("RE: Operands must be of type integers\n");
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            FLOAT,
+            {
+                .fNumber = a.as.fNumber / b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(a.type == BOOL || b.type == BOOL){
+        // both are bools
+        printf("RE: operands must be of type numbers\n");
+    }else if(!a.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.iNumber / b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            INTEGER,
+            {
+                .fNumber = a.as.fNumber * b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
     }
 
 }
@@ -213,10 +410,12 @@ static void modulo(ValueStack* valueStack){
 
     if(!(a.type + b.type)){
         // both are integers {note: modulo does not support doubles}
-        Value value;
-        value.type = INTEGER;
-        value.as.iNumber = a.as.iNumber % b.as.iNumber;
-        printf("mod: %d\n", value.as.iNumber);
+        Value value = {
+            INTEGER,
+            {
+                .iNumber = a.as.iNumber % b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
@@ -228,14 +427,44 @@ static void less(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    if(!(a.type + b.type)){
-        // both are integers {note: relational ops requires operands to be numbers int or double}
-        Value value;
-        value.type = BOOL;
-        value.as.iNumber = a.as.iNumber < b.as.iNumber;
+    uint8_t vType = a.type + b.type;
+
+    if(vType < 3){
+        // both are integers or bools
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.iNumber < b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.fNumber < b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!a.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.iNumber < b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.fNumber < b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
-        printf("RE: Operands must be of type numbers\n");
+        printf("RE: operands must be of type numbers or integers\n");
     }
 
 }
@@ -245,30 +474,91 @@ static void greater(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    if(!(a.type + b.type)){
-        // both are integers {note: relational ops requires operands to be numbers int or double}
-        Value value;
-        value.type = BOOL;
-        value.as.iNumber = a.as.iNumber > b.as.iNumber;
+    uint8_t vType = a.type + b.type;
+
+    if(vType < 3){
+        // both are integers or bools
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.iNumber > b.as.iNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.fNumber > b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!a.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.iNumber > b.as.fNumber
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = a.as.fNumber > b.as.iNumber
+            }
+        };
         pushValue(valueStack, value);
     }else{
-        printf("RE: Operands must be of type numbers\n");
+        printf("RE: operands must be of type numbers or bools\n");
     }
 }
 
 static void less_equal(ValueStack* valueStack){
+    
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    if(!(a.type + b.type)){
-        // both are integers {note: relational ops requires operands to be numbers int or double}
-        Value value;
-        value.type = BOOL;
-        value.as.iNumber = !(a.as.iNumber > b.as.iNumber);
+    uint8_t vType = a.type + b.type;
+
+    if(vType < 3){
+        // both are integers
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber > b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber > b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!a.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber > b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber > b.as.iNumber)
+            }
+        };
         pushValue(valueStack, value);
     }else{
-        printf("RE: Operands must be of type numbers\n");
+        printf("RE: operands must be of type numbers or bools\n");
     }
 }
 
@@ -277,14 +567,44 @@ static void greater_equal(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    if(!(a.type + b.type)){
-        // both are integers {note: relational ops requires operands to be numbers int or double}
-        Value value;
-        value.type = BOOL;
-        value.as.iNumber = !(a.as.iNumber < b.as.iNumber);
+    uint8_t vType = a.type + b.type;
+
+    if(vType < 3){
+        // both are integers
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber < b.as.iNumber)
+            }
+        };
         pushValue(valueStack, value);
-    }else{
-        printf("RE: Operands must be of type numbers\n");
+    }else if(vType == 4){
+        // both are floats
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber < b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!a.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber < b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else if(!b.type){
+        Value value = {
+            BOOL,
+            {
+                .iNumber = !(a.as.iNumber < b.as.iNumber)
+            }
+        };
+        pushValue(valueStack, value);
+    }else {
+        printf("RE: operands must be of type numbers\n");
     }
 }
 
@@ -293,9 +613,12 @@ static void is_equal(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    Value value;
-    value.type = BOOL;
-    value.as.iNumber = truth(&a, &b);
+    Value value = {
+        BOOL,
+        {
+            .iNumber = truth(&a, &b)
+        }
+    };
     pushValue(valueStack, value);
 }
 
@@ -304,14 +627,25 @@ static void is_not_equal(ValueStack* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
-    Value value;
-    value.type = BOOL;
-    value.as.iNumber = !(truth(&a, &b));
+    Value value = {
+        BOOL,
+        {
+            .iNumber = !(truth(&a, &b))
+        }
+    };
     pushValue(valueStack, value);
 }
 
 static void print(ValueStack* valueStack){
-    printf("%d\n", popValue(valueStack).as.iNumber);
+    Value value = popValue(valueStack);
+
+    if(!value.type){
+        printf("%d\n", value.as.iNumber);
+    }else if(value.type == 1){
+        printf("%s\n", value.as.iNumber == 0 ? "false" : "true");
+    }else if(value.type == 2){
+        printf("%f\n", value.as.fNumber);
+    }
 }
 
 static void assign(ValueStack* valueStack){}
@@ -325,6 +659,7 @@ FuncOp funcs[] = {
     [OP_BITWISE_OR] = bitwise_or,
     [OP_BITWISE_XOR] = bitwise_xor,
     [OP_BITWISE_AND] = bitwise_and,
+    [OP_BITWISE_NOT] = bitwise_not,
     [OP_ADD]  = add,
     [OP_MINUS] = minus,
     [OP_MULTIPLY] = multiply,

@@ -24,6 +24,7 @@ typedef enum{
     OP_MODULO,
     OP_U_MINUS,
     OP_NOT,
+    OP_BITWISE_NOT,
     OP_PRINT
 } OpCode;
 

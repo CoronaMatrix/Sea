@@ -94,6 +94,10 @@ Token scanToken(){
             previousToken = TOKEN_BITWISE_XOR;
             return makeToken(TOKEN_BITWISE_XOR, lineNumber, value);
 
+        case '~':
+            previousToken = TOKEN_BITWISE_NOT;
+            return makeToken(TOKEN_BITWISE_NOT, lineNumber, value);
+
         case '>':
             // check for = character | check for > 
             if(*(source + 1) == '='){

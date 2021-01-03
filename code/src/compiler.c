@@ -28,7 +28,8 @@ typedef enum{
     DIVIDE = 8,
     MODULO = 8,
     U_MINUS = 9,
-    U_NOT = 9
+    U_NOT = 9,
+    BITWISE_NOT = 9
 } OpPrec;
 
 typedef void (*ParseFun)();
@@ -54,6 +55,7 @@ OpPrec precendence[] = {
     [TOKEN_BITWISE_AND] = BITWISE_AND,
     [TOKEN_BITWISE_OR] = BITWISE_OR,
     [TOKEN_BITWISE_XOR] = BITWISE_XOR,
+    [TOKEN_BITWISE_NOT] = BITWISE_NOT,
     
 };
 
@@ -184,6 +186,7 @@ ParseFun parse[] = {
     [TOKEN_BITWISE_XOR] = bitwiseOp,
     [TOKEN_U_MINUS] = unaryOp,
     [TOKEN_BANG] = unaryOp,
+    [TOKEN_BITWISE_NOT] = unaryOp,
     [TOKEN_OPEN_PAREN] = openParen,
     [TOKEN_CLOSE_PAREN] = closeParen,
     [TOKEN_INTEGER] = intNumber,

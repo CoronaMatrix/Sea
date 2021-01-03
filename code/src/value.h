@@ -5,11 +5,13 @@
 typedef enum{
     INTEGER,
     BOOL,
+    FLOAT,
 } ValueType;
 
 typedef struct{
     ValueType type;
     union{
+        float fNumber;
         int iNumber;
     }as;
 } Value;

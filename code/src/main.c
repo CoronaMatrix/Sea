@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "compiler.h"
 int main(){
-    
-    compile("5<<2;");
+    compile("~103 + 104;");
     return 0;
 }
