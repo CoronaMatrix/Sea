@@ -5,13 +5,26 @@
 #include "utils/value_stack.h"
 
 typedef enum{
-    OP_ADD = 0,
-    OP_MINUS = 1,
-    OP_DIVIDE = 2,
-    OP_MULTIPLY = 3,
-    OP_MODULO = 4,
-    OP_U_MINUS = 5,
-    OP_PRINT = 6
+    OP_ASSIGN,
+    OP_BITWISE_OR,
+    OP_BITWISE_XOR,
+    OP_BITWISE_AND,
+    OP_EQUAL,
+    OP_NOT_EQUAL,
+    OP_LESS,
+    OP_GREATER,
+    OP_LESS_EQUAL,
+    OP_GREAER_EQUAL,
+    OP_LEFT_SHIFT,
+    OP_RIGHT_SHIFT,
+    OP_ADD,
+    OP_MINUS,
+    OP_DIVIDE,
+    OP_MULTIPLY,
+    OP_MODULO,
+    OP_U_MINUS,
+    OP_NOT,
+    OP_PRINT
 } OpCode;
 
 typedef struct{

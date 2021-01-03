@@ -5,7 +5,7 @@
 
 const char* source;
 int lineNumber;
-int previousToken = -1;
+int previousToken = -1; // it need to be reset for every other expression
 
 static int isDigit(char c){
     return c > '/' && c < ':';
@@ -43,7 +43,6 @@ static Token scanNumber(){
         else result = result * 10 + c - '0';
         c = *(++source);
     }
-
     TokenValue value;
     if(overflow) value.number = INT_MAX;
     else value.number = result;
@@ -75,6 +74,7 @@ Token scanToken(){
                 previousToken = TOKEN_U_MINUS;
                 return makeToken(TOKEN_U_MINUS, lineNumber, value);
             }
+            printf("scanTokenMinus\n");
             previousToken = TOKEN_MINUS;
             return makeToken(TOKEN_MINUS, lineNumber, value);
 
@@ -89,6 +89,71 @@ Token scanToken(){
         case '%':
             previousToken = TOKEN_MODULO;
             return makeToken(TOKEN_MODULO, lineNumber, value);
+
+        case '^':
+            previousToken = TOKEN_BITWISE_XOR;
+            return makeToken(TOKEN_BITWISE_XOR, lineNumber, value);
+
+        case '>':
+            // check for = character | check for > 
+            if(*(source + 1) == '='){
+                previousToken = TOKEN_GREATER_EQUAL;
+                source++;
+                return makeToken(TOKEN_GREATER_EQUAL, lineNumber, value);
+            }else if(*(source + 1) == '>'){
+                // right shift token
+                previousToken = TOKEN_RIGHT_SHIFT;
+                source++;
+                return makeToken(TOKEN_RIGHT_SHIFT, lineNumber, value);
+            }
+            previousToken = TOKEN_GREATER;
+            return makeToken(TOKEN_GREATER, lineNumber, value);
+
+        case '<':
+
+            // check for = character | check for < 
+            if(*(source + 1) == '='){
+                previousToken = TOKEN_LESS_EQUAL;
+                source++;
+                return makeToken(TOKEN_LESS_EQUAL, lineNumber, value);
+            }else if(*(source + 1) == '<'){
+                // left shift token
+                previousToken = TOKEN_LEFT_SHIFT;
+                source++;
+                return makeToken(TOKEN_LEFT_SHIFT, lineNumber, value);
+            }
+            previousToken = TOKEN_LESS;
+            return makeToken(TOKEN_LESS, lineNumber, value);
+
+        case '!':
+            // check for = character
+            if(*(source + 1) == '='){
+                previousToken = TOKEN_BANG_EQUAL;
+                source++;
+                return makeToken(TOKEN_BANG_EQUAL, lineNumber, value);
+            }
+            previousToken = TOKEN_BANG;
+            return makeToken(TOKEN_BANG, lineNumber, value);
+
+        case '=':
+            // check for = character
+            if(*(source + 1) == '='){
+                previousToken = TOKEN_EQUAL_EQUAL;
+                source++;
+                return makeToken(TOKEN_EQUAL_EQUAL, lineNumber, value);
+            }
+            previousToken = TOKEN_EQUAL;
+            return makeToken(TOKEN_EQUAL, lineNumber, value);
+
+        case '&':
+            // TODO: check for &
+            previousToken = TOKEN_BITWISE_AND;
+            return makeToken(TOKEN_BITWISE_AND, lineNumber, value);
+
+        case '|':
+            // TODO: check for |
+            previousToken = TOKEN_BITWISE_OR;
+            return makeToken(TOKEN_BITWISE_OR, lineNumber, value);
 
         case '(':
             previousToken = TOKEN_OPEN_PAREN;

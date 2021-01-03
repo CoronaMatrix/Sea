@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "compiler.h"
-
 int main(){
-    compile("2 + 3;");
+    
+    compile("5<<2;");
     return 0;
 }
