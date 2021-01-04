@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-// TODO: remove all functions for parsing expressions [remove repeated code]
 
 typedef enum{
     ASSIGN = 0,
@@ -34,7 +33,6 @@ typedef enum{
 
 typedef void (*ParseFun)();
 
-/*OpPrec precendence[] = {LESS, BITWISE_OR, BITWISE_XOR, BITWISE_AND, GREATER, LESS_EQUAL, GREATER_EQUAL, PLUS, MINUS, DIVIDE, MULTIPLY, MODULO, U_MINUS};*/
 
 OpPrec precendence[] = {
     [TOKEN_LESS] = LESS,
@@ -66,9 +64,12 @@ OpStack opStack;
 VM vm;
 
 static void intNumber(){
-    Value intValue;
-    intValue.type = INTEGER;
-    intValue.as.iNumber = currentToken.value.number;
+    Value intValue = {
+        INTEGER,
+        {
+            .iNumber = currentToken.value.number
+        }
+    };
     pushValue(&valueStack, intValue);
 }
 
@@ -80,7 +81,7 @@ static void string(){
 
 }
 
-static void unaryOp(){
+static void arithmeticOp(){
     if(opStack.count == 0){
         pushOp(&opStack, currentToken.type);
     }else{
@@ -92,69 +93,6 @@ static void unaryOp(){
     }
 }
 
-static void binaryOp(){
-    if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
-    }else{
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
-        }
-        pushOp(&opStack, currentToken.type);
-    }
-}
-
-static void relationalOp(){
-
-    if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
-    }else{
-        
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
-        }
-        pushOp(&opStack, currentToken.type);
-    }
-
-}
-
-static void equalityOp(){
-
-    if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
-    }else{
-        
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
-        }
-        pushOp(&opStack, currentToken.type);
-    }
-
-}
-
-static void bitwiseOp(){
-
-    if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
-    }else{
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
-        }
-        pushOp(&opStack, currentToken.type);
-    }
-
-}
-
-static void shiftOp(){
-
-    if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
-    }else{
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
-        }
-        pushOp(&opStack, currentToken.type);
-    }
-}
 
 static void openParen(){
 
@@ -170,29 +108,30 @@ static void closeParen(){
 
 ParseFun parse[] = {
     [TOKEN_EQUAL] = NULL,
-    [TOKEN_EQUAL_EQUAL] = equalityOp,
-    [TOKEN_BANG_EQUAL] = equalityOp,
-    [TOKEN_LESS] = relationalOp,
-    [TOKEN_GREATER] = relationalOp,
-    [TOKEN_LESS_EQUAL] = relationalOp,
-    [TOKEN_GREATER_EQUAL] = relationalOp,
-    [TOKEN_PLUS] = binaryOp,
-    [TOKEN_MINUS] = binaryOp,
-    [TOKEN_SLASH] = binaryOp,
-    [TOKEN_STAR] = binaryOp,
-    [TOKEN_MODULO] = binaryOp,
-    [TOKEN_BITWISE_AND] = bitwiseOp,
-    [TOKEN_BITWISE_OR] = bitwiseOp,
-    [TOKEN_BITWISE_XOR] = bitwiseOp,
-    [TOKEN_U_MINUS] = unaryOp,
-    [TOKEN_BANG] = unaryOp,
-    [TOKEN_BITWISE_NOT] = unaryOp,
+    [TOKEN_EQUAL_EQUAL] = arithmeticOp,
+    [TOKEN_BANG_EQUAL] = arithmeticOp,
+    [TOKEN_LESS] = arithmeticOp,
+    [TOKEN_GREATER] = arithmeticOp,
+    [TOKEN_LESS_EQUAL] = arithmeticOp,
+    [TOKEN_GREATER_EQUAL] = arithmeticOp,
+    [TOKEN_PLUS] = arithmeticOp,
+    [TOKEN_MINUS] = arithmeticOp,
+    [TOKEN_SLASH] = arithmeticOp,
+    [TOKEN_STAR] = arithmeticOp,
+    [TOKEN_MODULO] = arithmeticOp,
+    [TOKEN_BITWISE_AND] = arithmeticOp,
+    [TOKEN_BITWISE_OR] = arithmeticOp,
+    [TOKEN_BITWISE_XOR] = arithmeticOp,
+    [TOKEN_U_MINUS] = arithmeticOp,
+    [TOKEN_BANG] = arithmeticOp,
+    [TOKEN_BITWISE_NOT] = arithmeticOp,
     [TOKEN_OPEN_PAREN] = openParen,
     [TOKEN_CLOSE_PAREN] = closeParen,
     [TOKEN_INTEGER] = intNumber,
-    [TOKEN_LEFT_SHIFT] = shiftOp,
-    [TOKEN_RIGHT_SHIFT] = shiftOp,
+    [TOKEN_LEFT_SHIFT] = arithmeticOp,
+    [TOKEN_RIGHT_SHIFT] = arithmeticOp,
 };
+
 
 void expression(){
     currentToken = scanToken();
@@ -207,6 +146,7 @@ void expression(){
 
     run(&vm, OP_PRINT);
 }
+
 
 void compile(const char *buffer){
 

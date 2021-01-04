@@ -25,14 +25,16 @@ typedef enum{
     TOKEN_OPEN_PAREN,
     TOKEN_CLOSE_PAREN,
     TOKEN_INTEGER,
+    TOKEN_IDENTIFIER,
     TOKEN_SEMICOLON,
-
+    TOKEN_LET
 
 } TokenType;
 
 typedef union{
 
     int number;
+    const char* string;
 
 } TokenValue;
 
@@ -40,6 +42,7 @@ typedef struct{
 
     TokenType type;
     int line;
+    int length;
     TokenValue value;
 
 } Token;

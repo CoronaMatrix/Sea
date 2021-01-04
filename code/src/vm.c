@@ -650,10 +650,6 @@ static void print(ValueStack* valueStack){
 
 static void assign(ValueStack* valueStack){}
 
-/*FuncOp funcs[] = {*/
-  /*assign, bitwise_or, bitwise_xor, bitwise_and, is_equal, is_not_equal, less, greater, less_equal, greater_equal,  add, minus, divide, multiply, modulo, u_minus, u_not, print*/
-/*};*/
-
 FuncOp funcs[] = {
     [OP_ASSIGN] = assign,
     [OP_BITWISE_OR] = bitwise_or,

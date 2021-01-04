@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 #include "scanner.h"
 
 const char* source;
@@ -9,6 +10,10 @@ int previousToken = -1; // it need to be reset for every other expression
 
 static int isDigit(char c){
     return c > '/' && c < ':';
+}
+
+static int isAlpha(char c){
+    return (c > '`' && c < '{') || (c > '@' && c < '[') || (c == '_'); 
 }
 
 static int escape(){
@@ -25,7 +30,7 @@ void initScanner(const char *buffer){
 
 static Token makeToken(TokenType type, int line, TokenValue value){
     Token token = {
-        type, line, value
+        type, line,0, value
     };
     source++;
     return token;
@@ -37,7 +42,7 @@ static Token scanNumber(){
     int result = 0;
 
     char c = *source;
-    while(isDigit(c) > 0){
+    while(isDigit(c)){
         if(result > INT_MAX / 10) overflow = 1;
         else if(result * 10 > (INT_MAX - c + '0')) overflow = 1;
         else result = result * 10 + c - '0';
@@ -47,14 +52,59 @@ static Token scanNumber(){
     if(overflow) value.number = INT_MAX;
     else value.number = result;
     Token token = {
-        TOKEN_INTEGER, lineNumber, value
+        TOKEN_INTEGER, lineNumber,0, value
     };
 
     previousToken = TOKEN_INTEGER; 
 
     return token;
 }
+static Token keywordOrIdent(int from, int to, const char* start, const char* with, TokenType tokenType){
 
+    int length = source - start;
+    if(length == from + to && !(memcmp(start + from, with, to))){
+        // token is a keyword
+        Token token = {
+            tokenType,
+            lineNumber
+        };
+        return token; 
+    }
+
+    // Token is a identifier
+
+    Token token = {
+        TOKEN_IDENTIFIER,
+        lineNumber,
+        length,
+        {
+            .string = start
+        }
+    };
+    return token;
+}
+
+static Token scanIdentifier(){
+    const char* start = source++;
+    while(isAlpha(*source) || isDigit(*source)){
+        source++;
+    }
+    
+    switch (*start) {
+        case 'l':
+            return keywordOrIdent(1, 2, start, "et", TOKEN_LET);
+    };
+
+    Token token = {
+        TOKEN_IDENTIFIER,
+        lineNumber,
+        source - start,
+        {
+            .string = start
+        }
+    };
+    return token;
+}
 
 Token scanToken(){
 
@@ -172,8 +222,8 @@ Token scanToken(){
             return makeToken(TOKEN_SEMICOLON, lineNumber, value);
 
         default:
-            return scanNumber();
-
+            if(isDigit(*source)) return scanNumber();
+            else if(isAlpha(*source)) return scanIdentifier();
     }
 
 }
