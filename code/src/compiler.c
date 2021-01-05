@@ -1,12 +1,11 @@
 #include "compiler.h"
 #include "scanner.h"
-#include "utils/op_stack.h"
-#include "utils/value_stack.h"
+#include "utils/int_array.h"
+#include "utils/value_array.h"
 #include "value.h"
 #include "vm.h"
 #include <stdint.h>
 #include <stdio.h>
-
 
 typedef enum{
     ASSIGN = 0,
@@ -59,9 +58,19 @@ OpPrec precendence[] = {
 
 Token currentToken;
 
-ValueStack valueStack;
-OpStack opStack;
-VM vm;
+IntArray opStack;
+IntArray vmOp;
+ValueArray constants;
+
+void emit(uint32_t op){
+    pushIntArray(&vmOp, op);
+}
+
+void emit2(uint32_t op1, uint32_t op2){
+
+    pushIntArray(&vmOp, op1);
+    pushIntArray(&vmOp, op2);
+}
 
 static void intNumber(){
     Value intValue = {
@@ -70,7 +79,7 @@ static void intNumber(){
             .iNumber = currentToken.value.number
         }
     };
-    pushValue(&valueStack, intValue);
+   emit2(OP_READ_INT, pushValue(&constants, intValue));
 }
 
 static void floatNumber(){
@@ -83,27 +92,27 @@ static void string(){
 
 static void arithmeticOp(){
     if(opStack.count == 0){
-        pushOp(&opStack, currentToken.type);
+        pushIntArray(&opStack, currentToken.type);
     }else{
 
-        while(peekOp(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekOp(&opStack)] > precendence[currentToken.type])){
-            run(&vm, popOp(&opStack));
+        while(peekIntArray(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekIntArray(&opStack)] > precendence[currentToken.type])){
+            emit(popIntArray(&opStack));
         }
-        pushOp(&opStack, currentToken.type);
+        pushIntArray(&opStack, currentToken.type);
     }
 }
 
 
 static void openParen(){
 
-    pushOp(&opStack, TOKEN_OPEN_PAREN);
+    pushIntArray(&opStack, TOKEN_OPEN_PAREN);
 
 }
 static void closeParen(){
-    while(peekOp(&opStack) != TOKEN_OPEN_PAREN && opStack.count != 0){
-        run(&vm, popOp(&opStack));
+    while(peekIntArray(&opStack) != TOKEN_OPEN_PAREN && opStack.count != 0){
+        emit(popIntArray(&opStack));
     }
-    popOp(&opStack);
+    popIntArray(&opStack);
 }
 
 ParseFun parse[] = {
@@ -141,19 +150,17 @@ void expression(){
 
     }
     while(opStack.count > 0){
-        run(&vm, popOp(&opStack));
+        emit(popIntArray(&opStack));
     }
 
-    run(&vm, OP_PRINT);
+    emit(OP_PRINT);
 }
 
 
 void compile(const char *buffer){
 
     initScanner(buffer);
-    initVm(&vm, &opStack, &valueStack);
     expression();
-    freeVm(&vm);
 
 }
 

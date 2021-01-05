@@ -1,22 +1,20 @@
 #include <stdio.h>
 #include "value.h"
 #include "vm.h"
-#include "utils/op_stack.h"
-#include "utils/value_stack.h"
+#include "utils/int_array.h"
+#include "utils/value_array.h"
 
-typedef void (*FuncOp)(ValueStack* valueStack);
+typedef void (*FuncOp)(ValueArray* valueStack);
 
-void initVm(VM *vm, OpStack *opStack, ValueStack *valueStack){
-    initOpStack(opStack);
-    initValueStack(valueStack);
-    vm->opStack = opStack;
+void initVm(VM *vm, ValueArray *valueStack){
+    initValueArray(valueStack, 8);
     vm->valueStack = valueStack;
 }
 
 void freeVm(VM* vm){
-    freeOpStack(vm->opStack);
-    freeValueStack(vm->valueStack);
+    freeValueArray(vm->valueStack);
 }
+
 
 int truth(Value* a, Value* b){
     uint8_t vType = a->type + b->type;
@@ -59,7 +57,7 @@ int falsy(Value* a){
 
 
 
-static void left_shift(ValueStack* valueStack){
+static void left_shift(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -78,7 +76,7 @@ static void left_shift(ValueStack* valueStack){
     }
 }
 
-static void right_shift(ValueStack* valueStack){
+static void right_shift(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -97,7 +95,7 @@ static void right_shift(ValueStack* valueStack){
     }
 }
 
-static void bitwise_not(ValueStack* valueStack){
+static void bitwise_not(ValueArray* valueStack){
     Value a = popValue(valueStack);
     if(!a.type){
         // Operand is integer
@@ -115,7 +113,7 @@ static void bitwise_not(ValueStack* valueStack){
     }
 }
 
-static void bitwise_or(ValueStack* valueStack){
+static void bitwise_or(ValueArray* valueStack){
     
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -134,7 +132,7 @@ static void bitwise_or(ValueStack* valueStack){
     }
 }
 
-static void bitwise_xor(ValueStack* valueStack){
+static void bitwise_xor(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -153,7 +151,7 @@ static void bitwise_xor(ValueStack* valueStack){
     }
 }
 
-static void bitwise_and(ValueStack* valueStack){
+static void bitwise_and(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -173,7 +171,7 @@ static void bitwise_and(ValueStack* valueStack){
     }
 }
 
-static void add(ValueStack* valueStack){
+static void add(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -221,7 +219,7 @@ static void add(ValueStack* valueStack){
 
 }
 
-static void minus(ValueStack* valueStack){
+static void minus(ValueArray* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -268,7 +266,7 @@ static void minus(ValueStack* valueStack){
 
 
 }
-static void u_minus(ValueStack* valueStack){
+static void u_minus(ValueArray* valueStack){
     Value a = popValue(valueStack);
     if(!a.type){
         // number is integer
@@ -293,7 +291,7 @@ static void u_minus(ValueStack* valueStack){
     }
 }
 
-static void u_not(ValueStack* valueStack){
+static void u_not(ValueArray* valueStack){
     Value a = popValue(valueStack);
     Value value = {
         BOOL,
@@ -307,7 +305,7 @@ static void u_not(ValueStack* valueStack){
 
 
 
-static void multiply(ValueStack* valueStack){
+static void multiply(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -354,7 +352,7 @@ static void multiply(ValueStack* valueStack){
     }
 
 }
-static void divide(ValueStack* valueStack){
+static void divide(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -404,7 +402,7 @@ static void divide(ValueStack* valueStack){
 
 }
 
-static void modulo(ValueStack* valueStack){
+static void modulo(ValueArray* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -422,7 +420,7 @@ static void modulo(ValueStack* valueStack){
     }
 }
 
-static void less(ValueStack* valueStack){
+static void less(ValueArray* valueStack){
     
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -469,7 +467,7 @@ static void less(ValueStack* valueStack){
 
 }
 
-static void greater(ValueStack* valueStack){
+static void greater(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -515,7 +513,7 @@ static void greater(ValueStack* valueStack){
     }
 }
 
-static void less_equal(ValueStack* valueStack){
+static void less_equal(ValueArray* valueStack){
     
 
     Value b = popValue(valueStack);
@@ -562,7 +560,7 @@ static void less_equal(ValueStack* valueStack){
     }
 }
 
-static void greater_equal(ValueStack* valueStack){
+static void greater_equal(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -609,7 +607,7 @@ static void greater_equal(ValueStack* valueStack){
 }
 
 
-static void is_equal(ValueStack* valueStack){
+static void is_equal(ValueArray* valueStack){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -622,7 +620,7 @@ static void is_equal(ValueStack* valueStack){
     pushValue(valueStack, value);
 }
 
-static void is_not_equal(ValueStack* valueStack){
+static void is_not_equal(ValueArray* valueStack){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -636,7 +634,7 @@ static void is_not_equal(ValueStack* valueStack){
     pushValue(valueStack, value);
 }
 
-static void print(ValueStack* valueStack){
+static void print(ValueArray* valueStack){
     Value value = popValue(valueStack);
 
     if(!value.type){
@@ -648,7 +646,7 @@ static void print(ValueStack* valueStack){
     }
 }
 
-static void assign(ValueStack* valueStack){}
+static void assign(ValueArray* valueStack){}
 
 FuncOp funcs[] = {
     [OP_ASSIGN] = assign,

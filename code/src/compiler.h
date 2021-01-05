@@ -2,7 +2,6 @@
 #define SEA_COMPILER_H
 
 #include "vm.h"
-
 void compile(const char *buffer);
 
 #endif

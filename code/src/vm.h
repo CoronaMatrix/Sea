@@ -1,8 +1,8 @@
 #ifndef SEA_VM_H
 #define SEA_VM_H
 #include "value.h"
-#include "utils/op_stack.h"
-#include "utils/value_stack.h"
+#include "utils/int_array.h"
+#include "utils/value_array.h"
 
 typedef enum{
     OP_ASSIGN,
@@ -25,16 +25,15 @@ typedef enum{
     OP_U_MINUS,
     OP_NOT,
     OP_BITWISE_NOT,
-    OP_PRINT
+    OP_PRINT,
+    OP_READ_INT
 } OpCode;
 
 typedef struct{
-    OpStack* opStack;
-    ValueStack* valueStack;
-
+    ValueArray* valueStack;
 } VM;
 
-void initVm(VM* vm, OpStack* opStack, ValueStack* valueStack);
+void initVm(VM* vm, ValueArray* valueStack);
 void freeVm(VM* vm);
 
 void run(VM* vm, OpCode code);
