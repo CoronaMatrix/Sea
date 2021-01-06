@@ -3,6 +3,7 @@
 #include "value.h"
 #include "utils/int_array.h"
 #include "utils/value_array.h"
+#include <bits/stdint-uintn.h>
 
 typedef enum{
     OP_ASSIGN,
@@ -26,16 +27,20 @@ typedef enum{
     OP_NOT,
     OP_BITWISE_NOT,
     OP_PRINT,
-    OP_READ_INT
+    OP_READ_INT,
+    OP_EOF
 } OpCode;
 
+
 typedef struct{
+    uint32_t *vmCode;
+    ValueArray* constants;
     ValueArray* valueStack;
 } VM;
 
-void initVm(VM* vm, ValueArray* valueStack);
+void initVm(VM* vm);
 void freeVm(VM* vm);
 
-void run(VM* vm, OpCode code);
+void interpret(VM* vm);
 
 #endif

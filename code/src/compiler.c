@@ -154,13 +154,23 @@ void expression(){
     }
 
     emit(OP_PRINT);
+
 }
 
 
-void compile(const char *buffer){
+CompiledChunk compile(const char *buffer){
 
     initScanner(buffer);
+    initIntArray(&opStack, 30);
+    initIntArray(&vmOp, 100);
+    initValueArray(&constants, 30);
     expression();
-
+    freeIntArray(&opStack);
+    CompiledChunk compiledChunk = {
+        &vmOp,
+        &constants
+    };
+    emit(OP_EOF);
+    return compiledChunk;
 }
 

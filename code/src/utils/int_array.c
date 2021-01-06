@@ -2,14 +2,14 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "op_stack.h"
+#include "int_array.h"
 
 static const int GROW_FACTOR = 2;
 
 void initIntArray(IntArray *intArray, int initialCapacity){
     intArray->capacity = initialCapacity;
     intArray->count =0;
-    intArray->values = malloc(intArray->capacity);
+    intArray->values = malloc(intArray->capacity * sizeof(uint32_t));
 }
 
 void freeIntArray(IntArray *intArray){
@@ -23,12 +23,13 @@ uint32_t peekIntArray(IntArray* intArray){
 }
 
 void pushIntArray(IntArray *intArray, uint32_t op){
-    if(intArray->capacity < intArray->count + 1){
-        intArray->capacity = intArray->capacity * GROW_FACTOR;
-        uint32_t *tempStack = malloc(intArray->capacity);
-        memcpy(tempStack, intArray->values, intArray->capacity);
+    int oldCapacity = intArray->capacity;
+    if(oldCapacity < intArray->count + 1){
+        intArray->capacity = oldCapacity * GROW_FACTOR;
+        uint32_t *tempArray = malloc(intArray->capacity * sizeof(uint32_t));
+        memcpy(tempArray, intArray->values, oldCapacity*sizeof(uint32_t));
         free(intArray->values);
-        intArray->values = tempStack;
+        intArray->values = tempArray;
 
     }
 

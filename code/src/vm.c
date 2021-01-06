@@ -1,19 +1,34 @@
+#include <bits/stdint-uintn.h>
 #include <stdio.h>
 #include "value.h"
 #include "vm.h"
 #include "utils/int_array.h"
 #include "utils/value_array.h"
 
-typedef void (*FuncOp)(ValueArray* valueStack);
+typedef uint8_t (*FuncOp)();
 
-void initVm(VM *vm, ValueArray *valueStack){
-    initValueArray(valueStack, 8);
-    vm->valueStack = valueStack;
+typedef enum{
+    INTERPRET_OK,
+    INTERPRET_ERROR
+} Status;
+
+uint32_t* code;
+ValueArray* valueStack;
+ValueArray* vmConstants;
+
+void initVm(VM *vm){
+    code = vm->vmCode;
+    initValueArray(vm->valueStack, 20);
+    valueStack = vm->valueStack;
+    vmConstants = vm->constants;
 }
 
 void freeVm(VM* vm){
     freeValueArray(vm->valueStack);
+    freeValueArray(vm->constants);
 }
+
+
 
 
 int truth(Value* a, Value* b){
@@ -42,6 +57,7 @@ int truth(Value* a, Value* b){
     return 0;
 }
 
+
 int falsy(Value* a){
     if(a->type < 2){
         // bool and integer
@@ -53,11 +69,15 @@ int falsy(Value* a){
     // TODO: handle strings
     return 0;
 }
-     
 
+static uint8_t readInt(){
+    code++;
+    pushValue(valueStack, vmConstants->values[*code++]);
 
+    return INTERPRET_OK;
+}
 
-static void left_shift(ValueArray* valueStack){
+static uint8_t left_shift(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -73,10 +93,12 @@ static void left_shift(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void right_shift(ValueArray* valueStack){
+static uint8_t right_shift(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -92,10 +114,12 @@ static void right_shift(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void bitwise_not(ValueArray* valueStack){
+static uint8_t bitwise_not(){
     Value a = popValue(valueStack);
     if(!a.type){
         // Operand is integer
@@ -110,10 +134,12 @@ static void bitwise_not(ValueArray* valueStack){
 
     }else{
         printf("RE: Operand must be of type integer\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void bitwise_or(ValueArray* valueStack){
+static uint8_t bitwise_or(){
     
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -129,10 +155,12 @@ static void bitwise_or(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void bitwise_xor(ValueArray* valueStack){
+static uint8_t bitwise_xor(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -148,10 +176,12 @@ static void bitwise_xor(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void bitwise_and(ValueArray* valueStack){
+static uint8_t bitwise_and(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -168,14 +198,17 @@ static void bitwise_and(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void add(ValueArray* valueStack){
+static uint8_t add(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
-
+    printf("size: %d\n", valueStack->count);
+    
     uint8_t vType = a.type + b.type;
 
     if(!vType){
@@ -199,6 +232,8 @@ static void add(ValueArray* valueStack){
     }else if(a.type == BOOL || b.type == BOOL){
         // both are bools
         printf("RE+: operands must be of type numbers\n");
+        code++;
+        return INTERPRET_ERROR;
     }else if(!a.type){
         Value value = {
             INTEGER,
@@ -216,10 +251,12 @@ static void add(ValueArray* valueStack){
         };
         pushValue(valueStack, value);
     }
+    code++;
+    return INTERPRET_OK;
 
 }
 
-static void minus(ValueArray* valueStack){
+static uint8_t minus(){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -246,6 +283,7 @@ static void minus(ValueArray* valueStack){
     }else if(a.type == BOOL || b.type == BOOL){
         // both are bools
         printf("RE: operands must be of type numbers\n");
+        return INTERPRET_ERROR;
     }else if(!a.type){
         Value value = {
             INTEGER,
@@ -263,10 +301,11 @@ static void minus(ValueArray* valueStack){
         };
         pushValue(valueStack, value);
     }
+    return INTERPRET_OK;
 
 
 }
-static void u_minus(ValueArray* valueStack){
+static uint8_t u_minus(){
     Value a = popValue(valueStack);
     if(!a.type){
         // number is integer
@@ -288,10 +327,12 @@ static void u_minus(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operand must be of type integer\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void u_not(ValueArray* valueStack){
+static uint8_t u_not(){
     Value a = popValue(valueStack);
     Value value = {
         BOOL,
@@ -300,12 +341,11 @@ static void u_not(ValueArray* valueStack){
         }
     };
     pushValue(valueStack, value);
+    return INTERPRET_OK;
 }
 
 
-
-
-static void multiply(ValueArray* valueStack){
+static uint8_t multiply(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -333,6 +373,7 @@ static void multiply(ValueArray* valueStack){
     }else if(a.type == BOOL || b.type == BOOL){
         // both are bools
         printf("RE: operands must be of type numbers\n");
+        return INTERPRET_ERROR;
     }else if(!a.type){
         Value value = {
             INTEGER,
@@ -350,9 +391,10 @@ static void multiply(ValueArray* valueStack){
         };
         pushValue(valueStack, value);
     }
+    return INTERPRET_OK;
 
 }
-static void divide(ValueArray* valueStack){
+static uint8_t divide(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -382,6 +424,7 @@ static void divide(ValueArray* valueStack){
     }else if(a.type == BOOL || b.type == BOOL){
         // both are bools
         printf("RE: operands must be of type numbers\n");
+        return INTERPRET_ERROR;
     }else if(!a.type){
         Value value = {
             INTEGER,
@@ -399,10 +442,11 @@ static void divide(ValueArray* valueStack){
         };
         pushValue(valueStack, value);
     }
+    return INTERPRET_OK;
 
 }
 
-static void modulo(ValueArray* valueStack){
+static uint8_t modulo(){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -417,10 +461,12 @@ static void modulo(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: Operands must be of type integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void less(ValueArray* valueStack){
+static uint8_t less(){
     
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -463,11 +509,13 @@ static void less(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: operands must be of type numbers or integers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 
 }
 
-static void greater(ValueArray* valueStack){
+static uint8_t greater(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -510,10 +558,12 @@ static void greater(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: operands must be of type numbers or bools\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void less_equal(ValueArray* valueStack){
+static uint8_t less_equal(){
     
 
     Value b = popValue(valueStack);
@@ -557,10 +607,12 @@ static void less_equal(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else{
         printf("RE: operands must be of type numbers or bools\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
-static void greater_equal(ValueArray* valueStack){
+static uint8_t greater_equal(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -603,11 +655,13 @@ static void greater_equal(ValueArray* valueStack){
         pushValue(valueStack, value);
     }else {
         printf("RE: operands must be of type numbers\n");
+        return INTERPRET_ERROR;
     }
+    return INTERPRET_OK;
 }
 
 
-static void is_equal(ValueArray* valueStack){
+static uint8_t is_equal(){
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
 
@@ -618,9 +672,10 @@ static void is_equal(ValueArray* valueStack){
         }
     };
     pushValue(valueStack, value);
+    return INTERPRET_OK;
 }
 
-static void is_not_equal(ValueArray* valueStack){
+static uint8_t is_not_equal(){
 
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
@@ -632,10 +687,13 @@ static void is_not_equal(ValueArray* valueStack){
         }
     };
     pushValue(valueStack, value);
+    return INTERPRET_OK;
 }
 
-static void print(ValueArray* valueStack){
+static uint8_t print(){
     Value value = popValue(valueStack);
+
+
 
     if(!value.type){
         printf("%d\n", value.as.iNumber);
@@ -644,9 +702,17 @@ static void print(ValueArray* valueStack){
     }else if(value.type == 2){
         printf("%f\n", value.as.fNumber);
     }
+    code++;
+    return INTERPRET_OK;
 }
 
-static void assign(ValueArray* valueStack){}
+static uint8_t assign(){
+    return INTERPRET_OK;
+}
+
+static uint8_t eof(){
+    return INTERPRET_ERROR;
+}
 
 FuncOp funcs[] = {
     [OP_ASSIGN] = assign,
@@ -670,9 +736,15 @@ FuncOp funcs[] = {
     [OP_NOT_EQUAL] = is_not_equal,
     [OP_LEFT_SHIFT] = left_shift,
     [OP_RIGHT_SHIFT] = right_shift,
+    [OP_READ_INT] = readInt,
+    [OP_EOF] = eof
 };
 
-void run(VM *vm, OpCode code){
-    funcs[code](vm->valueStack);
-}
+/*void run(){*/
+    /*funcs[code](vm->valueStack);*/
+/*}*/
 
+void interpret(VM *vm){
+    
+    while(funcs[*code](vm->valueStack) == INTERPRET_OK);
+}

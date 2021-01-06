@@ -1,6 +1,7 @@
 #include <bits/stdint-uintn.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "value_array.h"
 #include "../value.h"
 
@@ -19,11 +20,13 @@ void freeValueArray(ValueArray *valueArray){
 
 uint32_t pushValue(ValueArray *valueArray, Value value){
     
-    if(valueArray->capacity < valueArray->count + 1){
-        valueArray->capacity = valueArray->capacity * GROW_FACTOR;
-        Value* tempStack = malloc(sizeof(Value) * valueArray->capacity);
+    int oldCapacity = valueArray->capacity;
+    if(oldCapacity < valueArray->count + 1){
+        valueArray->capacity = oldCapacity * GROW_FACTOR;
+        Value* tempArray = malloc(sizeof(Value) * valueArray->capacity);
+        memcpy(tempArray, valueArray->values, oldCapacity*sizeof(Value));
         free(valueArray->values);
-        valueArray->values = tempStack;
+        valueArray->values = tempArray;
     }
     valueArray->values[valueArray->count++] = value;
     return valueArray->count - 1;
