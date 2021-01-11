@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "value.h"
 #include "vm.h"
+#include "compiler.h"
 #include "utils/int_array.h"
 #include "utils/value_array.h"
 
@@ -14,18 +15,21 @@ typedef enum{
 
 uint32_t* code;
 ValueArray* valueStack;
-ValueArray* vmConstants;
+CompiledChunk compiledChunk;
 
-void initVm(VM *vm){
+void initVm(VM *vm, const char* source){
+    
+    compiledChunk = compile(source);
+    vm->vmCode = compiledChunk.vmCode->values;
     code = vm->vmCode;
-    initValueArray(vm->valueStack, 20);
-    valueStack = vm->valueStack;
-    vmConstants = vm->constants;
+    initValueArray(&vm->valueStack, 20);
+    valueStack = &vm->valueStack;
 }
 
 void freeVm(VM* vm){
-    freeValueArray(vm->valueStack);
-    freeValueArray(vm->constants);
+    freeValueArray(&vm->valueStack);
+    freeValueArray(compiledChunk.constants);
+    freeIntArray(compiledChunk.vmCode);
 }
 
 
@@ -71,8 +75,9 @@ int falsy(Value* a){
 }
 
 static uint8_t readInt(){
+    printf("read int\n");
     code++;
-    pushValue(valueStack, vmConstants->values[*code++]);
+    pushValue(valueStack, compiledChunk.constants->values[*code++]);
 
     return INTERPRET_OK;
 }
@@ -95,6 +100,7 @@ static uint8_t left_shift(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -116,6 +122,7 @@ static uint8_t right_shift(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -136,6 +143,7 @@ static uint8_t bitwise_not(){
         printf("RE: Operand must be of type integer\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -157,6 +165,7 @@ static uint8_t bitwise_or(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -178,6 +187,7 @@ static uint8_t bitwise_xor(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -200,6 +210,7 @@ static uint8_t bitwise_and(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -301,6 +312,7 @@ static uint8_t minus(){
         };
         pushValue(valueStack, value);
     }
+    code++;
     return INTERPRET_OK;
 
 
@@ -329,6 +341,7 @@ static uint8_t u_minus(){
         printf("RE: Operand must be of type integer\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -341,6 +354,7 @@ static uint8_t u_not(){
         }
     };
     pushValue(valueStack, value);
+    code++;
     return INTERPRET_OK;
 }
 
@@ -391,6 +405,7 @@ static uint8_t multiply(){
         };
         pushValue(valueStack, value);
     }
+    code++;
     return INTERPRET_OK;
 
 }
@@ -442,6 +457,7 @@ static uint8_t divide(){
         };
         pushValue(valueStack, value);
     }
+    code++;
     return INTERPRET_OK;
 
 }
@@ -463,6 +479,7 @@ static uint8_t modulo(){
         printf("RE: Operands must be of type integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -511,6 +528,7 @@ static uint8_t less(){
         printf("RE: operands must be of type numbers or integers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 
 }
@@ -560,6 +578,7 @@ static uint8_t greater(){
         printf("RE: operands must be of type numbers or bools\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -609,6 +628,7 @@ static uint8_t less_equal(){
         printf("RE: operands must be of type numbers or bools\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -657,6 +677,7 @@ static uint8_t greater_equal(){
         printf("RE: operands must be of type numbers\n");
         return INTERPRET_ERROR;
     }
+    code++;
     return INTERPRET_OK;
 }
 
@@ -672,6 +693,7 @@ static uint8_t is_equal(){
         }
     };
     pushValue(valueStack, value);
+    code++;
     return INTERPRET_OK;
 }
 
@@ -687,6 +709,7 @@ static uint8_t is_not_equal(){
         }
     };
     pushValue(valueStack, value);
+    code++;
     return INTERPRET_OK;
 }
 
@@ -707,10 +730,12 @@ static uint8_t print(){
 }
 
 static uint8_t assign(){
+    code++;
     return INTERPRET_OK;
 }
 
 static uint8_t eof(){
+    code++;
     return INTERPRET_ERROR;
 }
 

@@ -53,7 +53,6 @@ OpPrec precendence[] = {
     [TOKEN_BITWISE_OR] = BITWISE_OR,
     [TOKEN_BITWISE_XOR] = BITWISE_XOR,
     [TOKEN_BITWISE_NOT] = BITWISE_NOT,
-    
 };
 
 Token currentToken;
@@ -94,8 +93,8 @@ static void arithmeticOp(){
     if(opStack.count == 0){
         pushIntArray(&opStack, currentToken.type);
     }else{
-
-        while(peekIntArray(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekIntArray(&opStack)] > precendence[currentToken.type])){
+        // here we checking for precedence of op on stack >= precedence of current o
+        while(peekIntArray(&opStack) != TOKEN_OPEN_PAREN && (precendence[peekIntArray(&opStack)] + 1 > precendence[currentToken.type])){
             emit(popIntArray(&opStack));
         }
         pushIntArray(&opStack, currentToken.type);
@@ -161,9 +160,9 @@ void expression(){
 CompiledChunk compile(const char *buffer){
 
     initScanner(buffer);
-    initIntArray(&opStack, 30);
-    initIntArray(&vmOp, 100);
-    initValueArray(&constants, 30);
+    initIntArray(&opStack, 10);
+    initIntArray(&vmOp, 50);
+    initValueArray(&constants, 10);
     expression();
     freeIntArray(&opStack);
     CompiledChunk compiledChunk = {

@@ -34,11 +34,10 @@ typedef enum{
 
 typedef struct{
     uint32_t *vmCode;
-    ValueArray* constants;
-    ValueArray* valueStack;
+    ValueArray valueStack;
 } VM;
 
-void initVm(VM* vm);
+void initVm(VM* vm, const char* source);
 void freeVm(VM* vm);
 
 void interpret(VM* vm);

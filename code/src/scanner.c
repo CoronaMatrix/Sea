@@ -122,6 +122,7 @@ Token scanToken(){
         case '-':
             if(previousToken == TOKEN_OPEN_PAREN || previousToken == -1){
                 previousToken = TOKEN_U_MINUS;
+                printf("unaryminus\n");
                 return makeToken(TOKEN_U_MINUS, lineNumber, value);
             }
             printf("scanTokenMinus\n");
