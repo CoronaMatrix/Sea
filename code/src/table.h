@@ -3,6 +3,7 @@
 
 #include "value.h"
 #include "object.h"
+#include "./utils/common.h"
 
 typedef struct{
     ObjString* key;
@@ -17,9 +18,10 @@ typedef struct{
 } Table;
 
 void initTable(Table* table);
-bool tableSet(Table* table, ObjString* key, Value* value);
-Value tableGet(Table* table, ObjString* key);
-bool tableDelete(Table* table, ObjString* key);
+Bool tableSet(Table* table, ObjString* key, Value* value);
+// returns value in value* pointer
+Bool tableGet(Table* table, ObjString* key, Value* value);
+Bool tableDelete(Table* table, ObjString* key);
 void freeTable(Table* table);
 
 
