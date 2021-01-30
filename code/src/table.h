@@ -4,6 +4,7 @@
 #include "value.h"
 #include "object.h"
 #include "./utils/common.h"
+#define GOLD_NUMBER 999999999 
 
 typedef struct{
     ObjString* key;
@@ -23,6 +24,7 @@ Bool tableSet(Table* table, ObjString* key, Value* value);
 Bool tableGet(Table* table, ObjString* key, Value* value);
 Bool tableDelete(Table* table, ObjString* key);
 void freeTable(Table* table);
+void debugTable(Table* table);
 
 
 #endif
