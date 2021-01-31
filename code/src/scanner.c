@@ -93,6 +93,8 @@ static Token scanIdentifier(){
     switch (*start) {
         case 'l':
             return keywordOrIdent(1, 2, start, "et", TOKEN_LET);
+        case 'p':
+            return keywordOrIdent(1, 4, start, "rint", TOKEN_PRINT);
     };
 
     Token token = {
@@ -114,7 +116,9 @@ Token scanToken(){
 
     TokenValue value;
     switch(*source){
+        case '\0':
 
+            return makeToken(TOKEN_EOF, lineNumber, value);
         case '+':
             previousToken = TOKEN_PLUS;
             return makeToken(TOKEN_PLUS, lineNumber, value);

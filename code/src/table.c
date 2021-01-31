@@ -23,6 +23,7 @@ void freeTable(Table *table){
 }
 
 static void adjustCapacity(Table* table, uint32_t capacity){
+    /*printf("adjustCapacity - %d\n", capacity);*/
     
     Entry* tempEntries = malloc(sizeof(Entry)*capacity);
     for(int i = table->count; i < capacity; i++){
@@ -39,12 +40,11 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
 
     if(key == NULL){
         return FALSE;
-        printf("return false\n");
+        printf("TableSet Error- key is null\n");
     }
     
     if(table->count + 1 > table->capacity * MAX_LOAD_FACTOR){
         adjustCapacity(table, table->capacity < 8 ? 8 : table->capacity*GROW_FACTOR);
-        printf("adjust-%d\n", table->capacity);
     }
 
 
@@ -52,10 +52,8 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
     if(entry->key == NULL){
         entry->key = key;
         entry->value = *value;
-        
         key->dist = key->hash % table->capacity;
         table->count++;
-        printf("key-%s, -dist: %d\n", key->chars, key->dist);
         return TRUE;
      }
 
@@ -94,15 +92,11 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
 Bool tableGet(Table *table, ObjString *key, Value* value){
     if(key->dist == GOLD_NUMBER){
         // key never set
+        printf("TableGet Error- key{%s} is not present\n", key->chars);
         return FALSE;
     }
     Entry *entry = &(table->entries[key->dist]);
     
-    if(entry->key == NULL){
-        printf("it false\n");
-        return FALSE;
-    }
-    printf("it runs\n");
 
     *value = entry->value;
     return TRUE;
@@ -113,13 +107,10 @@ Bool tableGet(Table *table, ObjString *key, Value* value){
 Bool tableDelete(Table *table, ObjString *key){
     if(key->dist == GOLD_NUMBER || !table->count){
         // key never set present
+        printf("TableDelete Error- key is not present\n");
         return FALSE;
     }
-    Entry* entry = &(table->entries[(key->hash % table->capacity) + key->dist]);
-    if(entry->key == NULL ){
-        // key may be deleted
-        return FALSE;
-    }
+    Entry* entry = &(table->entries[key->dist]);
     entry->key = NULL;
     /*if(entry->value.type == STRING){*/
        /*free(((ObjString*)(entry->value.as.obj))->chars); */
@@ -136,7 +127,7 @@ void debugTable(Table* table, int printDist){
             Entry *entry = table->entries+i;
             if(entry->key != NULL){
                 if(printDist){
-                    printf("--dist: %d --", entry->key->dist);
+                    printf("--dist: %d -- ", entry->key->dist);
                 }
                 printf("{K: %s, ",entry->key->chars);
                 switch (entry->value.type){

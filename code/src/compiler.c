@@ -1,10 +1,14 @@
 #include "compiler.h"
 #include "scanner.h"
+
+#include "object.h"
 #include "utils/int_array.h"
 #include "utils/value_array.h"
 #include "value.h"
 #include "vm.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 typedef enum{
@@ -31,6 +35,7 @@ typedef enum{
 } OpPrec;
 
 typedef void (*ParseFun)();
+static void declarations();
 
 
 OpPrec precendence[] = {
@@ -101,6 +106,31 @@ static void arithmeticOp(){
     }
 }
 
+int findIdentifier(const char* identifierName, int length){
+
+    for(int i = 0; i < constants.count; i++){
+        if(constants.values[i].type == STRING){
+            ObjString* string = (ObjString*)constants.values[i].as.obj;
+            if(!memcmp(identifierName, string->chars, length)){
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+static void identifier(){
+    int index = findIdentifier(currentToken.value.string, currentToken.length);
+    if(index > -1){
+        emit2(OP_TABLE_GET, index);
+    }else{
+
+        printf("Undefined\n");
+
+    }
+    /*printf("Identifier is undefined!\n");*/
+}
+
 
 static void openParen(){
 
@@ -138,6 +168,7 @@ ParseFun parse[] = {
     [TOKEN_INTEGER] = intNumber,
     [TOKEN_LEFT_SHIFT] = arithmeticOp,
     [TOKEN_RIGHT_SHIFT] = arithmeticOp,
+    [TOKEN_IDENTIFIER] = identifier
 };
 
 
@@ -145,6 +176,10 @@ void expression(){
     currentToken = scanToken();
     while(currentToken.type != TOKEN_SEMICOLON){
         parse[currentToken.type]();
+        if(currentToken.type == TOKEN_EOF){
+            printf("Semicolon expected\n");
+            break;
+        }
         currentToken = scanToken();
 
     }
@@ -152,18 +187,68 @@ void expression(){
         emit(popIntArray(&opStack));
     }
 
-    emit(OP_PRINT);
+
 
 }
 
+// right to left
+void varDeclaration(){
+        currentToken = scanToken();
+        if(currentToken.type == TOKEN_IDENTIFIER){
+            int length = currentToken.length;
+            char *chars = malloc(length + 1);
+            memcpy(chars, currentToken.value.string, length);
+            chars[length] = '\0';
+            
+            currentToken = scanToken();
+            if(currentToken.type == TOKEN_EQUAL){
+                expression();
+                ObjString* string = allocateString(chars,length);
+                Value tempValue;
+                tempValue.type = STRING;
+                tempValue.as.obj = (Obj*)string;
+                
+                emit2(OP_TABLE_SET, pushValue(&constants, tempValue));
+                declarations();
+            }
+        }
+}
 
+void printStatement(){
+    expression();
+    emit(OP_PRINT);
+}
+
+void statements(){
+    if(currentToken.type == TOKEN_PRINT){
+        printStatement();
+        if(currentToken.type == TOKEN_SEMICOLON){
+            declarations();
+        }else{
+            // semicolon expected
+            printf("semicolon expected\n");
+        }
+    }
+}
+
+void declarations(){
+    currentToken = scanToken();
+    if(currentToken.type != TOKEN_EOF){
+
+        if(currentToken.type == TOKEN_LET){
+            varDeclaration();
+        }else{
+            statements();
+        }
+    }
+}
 CompiledChunk compile(const char *buffer){
 
     initScanner(buffer);
     initIntArray(&opStack, 10);
     initIntArray(&vmOp, 50);
     initValueArray(&constants, 10);
-    expression();
+    declarations();
     freeIntArray(&opStack);
     CompiledChunk compiledChunk = {
         &vmOp,

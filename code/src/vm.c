@@ -1,5 +1,7 @@
 #include <bits/stdint-uintn.h>
 #include <stdio.h>
+#include "object.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 #include "compiler.h"
@@ -16,6 +18,7 @@ typedef enum{
 uint32_t* code;
 ValueArray* valueStack;
 CompiledChunk compiledChunk;
+Table* globals;
 
 void initVm(VM *vm, const char* source){
     
@@ -24,12 +27,15 @@ void initVm(VM *vm, const char* source){
     code = vm->vmCode;
     initValueArray(&vm->valueStack, 20);
     valueStack = &vm->valueStack;
+    initTable(&(vm->globals));
+    globals = &(vm->globals);
 }
 
 void freeVm(VM* vm){
     freeValueArray(&vm->valueStack);
     freeValueArray(compiledChunk.constants);
     freeIntArray(compiledChunk.vmCode);
+    freeTable(&(vm->globals));
 }
 
 
@@ -74,8 +80,23 @@ int falsy(Value* a){
     return 0;
 }
 
+static uint8_t setGlobal(){
+    code++;
+    Value a = popValue(valueStack);
+
+    tableSet(globals, ((ObjString*)compiledChunk.constants->values[*code++].as.obj), &a);
+    return INTERPRET_OK;
+}
+
+static uint8_t getGlobal(){
+    code++;
+    Value a;
+    tableGet(globals, (ObjString*)((compiledChunk.constants->values[*code++]).as.obj), &a);
+    pushValue(valueStack, a);
+    return INTERPRET_OK;
+}
+
 static uint8_t readInt(){
-    printf("read int\n");
     code++;
     pushValue(valueStack, compiledChunk.constants->values[*code++]);
 
@@ -762,6 +783,8 @@ FuncOp funcs[] = {
     [OP_LEFT_SHIFT] = left_shift,
     [OP_RIGHT_SHIFT] = right_shift,
     [OP_READ_INT] = readInt,
+    [OP_TABLE_SET] = setGlobal,
+    [OP_TABLE_GET] = getGlobal,
     [OP_EOF] = eof
 };
 

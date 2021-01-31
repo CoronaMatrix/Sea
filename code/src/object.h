@@ -19,6 +19,6 @@ typedef struct {
 
 } ObjString;
 
-uint32_t hash(ObjString* key);
+ObjString* allocateString(char* chars, int length);
 
 #endif
