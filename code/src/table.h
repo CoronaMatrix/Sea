@@ -24,7 +24,7 @@ Bool tableSet(Table* table, ObjString* key, Value* value);
 Bool tableGet(Table* table, ObjString* key, Value* value);
 Bool tableDelete(Table* table, ObjString* key);
 void freeTable(Table* table);
-void debugTable(Table* table);
+void debugTable(Table* table, int printDist);
 
 
 #endif

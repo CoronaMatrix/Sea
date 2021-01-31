@@ -8,7 +8,7 @@
 #include "value.h"
 
 #define MAX_LOAD_FACTOR 0.75
-static const int GROW_FACTOR = 3;
+static const int GROW_FACTOR = 2;
 
 void initTable(Table* table){
     table->capacity = 0;
@@ -35,54 +35,54 @@ static void adjustCapacity(Table* table, uint32_t capacity){
 }
 
 Bool tableSet(Table *table, ObjString *key, Value *value){
+    
 
     if(key == NULL){
         return FALSE;
+        printf("return false\n");
     }
     
     if(table->count + 1 > table->capacity * MAX_LOAD_FACTOR){
-        adjustCapacity(table, (table->capacity > 0 ? table->capacity : 1) * GROW_FACTOR);
+        adjustCapacity(table, table->capacity < 8 ? 8 : table->capacity*GROW_FACTOR);
         printf("adjust-%d\n", table->capacity);
     }
 
 
     Entry* entry = &(table->entries[key->hash % (table->capacity)]);
     if(entry->key == NULL){
-        Entry temp = {
-            key, *value
-        };
-        *entry = temp;
-        key->dist = 0;
+        entry->key = key;
+        entry->value = *value;
+        
+        key->dist = key->hash % table->capacity;
         table->count++;
+        printf("key-%s, -dist: %d\n", key->chars, key->dist);
         return TRUE;
      }
 
-    if(!(memcmp(entry->key, key, key->length))){
-        // keys are same override
-        entry->value = *value;
-        table->count++;
-        return TRUE;
-    }
+    /*if(!(memcmp(entry->key, key, key->length))){*/
+        /*// keys are same override*/
+        /*entry->value = *value;*/
+        /*key->dist = entry->key->dist;*/
+        /*table->count++;*/
+        /*printf("keys are same\n");*/
+        /*return TRUE;*/
+    /*}*/
 
     for(int i = 0, j = table->capacity - 1; i < j; i++, j--){
-        if(table->entries[i].key == NULL){
+        if((table->entries + i)->key == NULL){
 
-            Entry temp = {
-                key, *value
-            };
-            key->dist = i - (key->hash % (table->capacity));
-
-            *entry = temp;
+            key->dist = i;
+            (table->entries + i)->key = key;
+            (table->entries + i)->value = *value;
             table->count++;
             return TRUE;
         }
 
-        if(table->entries[j].key == NULL){
-            Entry temp = {
-                key, *value
-            };
-            key->dist = j - (key->hash % (table->capacity));
-            *entry = temp;
+        if((table->entries + j)->key == NULL){
+
+            key->dist = j;
+            (table->entries + j)->key = key;
+            (table->entries + j)->value = *value;
             table->count++;
             return TRUE;
         }
@@ -96,15 +96,19 @@ Bool tableGet(Table *table, ObjString *key, Value* value){
         // key never set
         return FALSE;
     }
-    Entry *entry = &(table->entries[(key->hash % table->capacity) + key->dist]);
+    Entry *entry = &(table->entries[key->dist]);
     
     if(entry->key == NULL){
+        printf("it false\n");
         return FALSE;
     }
+    printf("it runs\n");
 
     *value = entry->value;
     return TRUE;
 }
+
+// It is caller responsibility to delete allocated memory of key and value if it is a obj
 
 Bool tableDelete(Table *table, ObjString *key){
     if(key->dist == GOLD_NUMBER || !table->count){
@@ -117,20 +121,23 @@ Bool tableDelete(Table *table, ObjString *key){
         return FALSE;
     }
     entry->key = NULL;
-    if(entry->value.type == STRING){
-       free(((ObjString*)(entry->value.as.obj))->chars); 
-    }
+    /*if(entry->value.type == STRING){*/
+       /*free(((ObjString*)(entry->value.as.obj))->chars); */
+    /*}*/
     table->count--;
     key->dist = GOLD_NUMBER;
     return TRUE;
 
 }
 
-void debugTable(Table* table){
+void debugTable(Table* table, int printDist){
     if(table->count){
         for(int i = 0; i < table->capacity; i++){
             Entry *entry = table->entries+i;
             if(entry->key != NULL){
+                if(printDist){
+                    printf("--dist: %d --", entry->key->dist);
+                }
                 printf("{K: %s, ",entry->key->chars);
                 switch (entry->value.type){
                     case INTEGER:
