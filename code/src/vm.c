@@ -20,7 +20,7 @@ ValueArray* valueStack;
 CompiledChunk compiledChunk;
 Table* globals;
 
-void initVm(VM *vm, const char* source){
+void initVm(VM *vm, char* source){
     
     compiledChunk = compile(source);
     vm->vmCode = compiledChunk.vmCode->values;

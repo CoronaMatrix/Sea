@@ -8,6 +8,6 @@ typedef struct{
     IntArray* vmCode;
     ValueArray* constants;
 } CompiledChunk;
-CompiledChunk compile(const char *buffer);
+CompiledChunk compile(char *buffer);
 
 #endif

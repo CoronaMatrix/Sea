@@ -19,7 +19,7 @@ static int isAlpha(char c){
 static int escape(){
     char c = *source;
         
-    return c == ' ';
+    return c == ' ' || c == '\n';
 }
 
 void initScanner(const char *buffer){

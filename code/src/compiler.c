@@ -242,7 +242,7 @@ void declarations(){
         }
     }
 }
-CompiledChunk compile(const char *buffer){
+CompiledChunk compile(char *buffer){
 
     initScanner(buffer);
     initIntArray(&opStack, 10);
@@ -255,6 +255,7 @@ CompiledChunk compile(const char *buffer){
         &constants
     };
     emit(OP_EOF);
+    free(buffer);
     return compiledChunk;
 }
 

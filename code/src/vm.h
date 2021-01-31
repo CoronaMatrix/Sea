@@ -41,7 +41,7 @@ typedef struct{
     Table globals;
 } VM;
 
-void initVm(VM* vm, const char* source);
+void initVm(VM* vm, char* source);
 void freeVm(VM* vm);
 
 void interpret(VM* vm);
