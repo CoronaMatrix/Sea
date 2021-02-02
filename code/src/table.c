@@ -2,11 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "object.h"
-#include "table.h"
-#include "utils/common.h"
-#include "value.h"
-
+#include "defs.h"
+#include "decl.h"
 #define MAX_LOAD_FACTOR 0.75
 static const int GROW_FACTOR = 2;
 

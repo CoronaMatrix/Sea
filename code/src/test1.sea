@@ -1,4 +1,2 @@
-let x = 4;
-let y = 3;
-let z = x + y;
-print z;
+let y;
+print y;

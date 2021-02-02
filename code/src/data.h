@@ -1,0 +1,11 @@
+
+//#ifndef extern_
+//#define extern_ extern
+//#endif
+#ifndef SEA_DATA_H
+#define SEA_DATA_H
+#include "defs.h"
+extern Token currentToken;
+extern CompiledChunk compiledChunk;
+extern IntArray opStack;
+#endif

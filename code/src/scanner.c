@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-#include "scanner.h"
-
+#include "defs.h"
+#include "decl.h"
 const char* source;
 int lineNumber;
 int previousToken = -1; // it need to be reset for every other expression
@@ -91,10 +91,14 @@ static Token scanIdentifier(){
     }
     
     switch (*start) {
+        case 'f':
+            return keywordOrIdent(1, 4, start, "alse", TOKEN_FALSE);
         case 'l':
             return keywordOrIdent(1, 2, start, "et", TOKEN_LET);
         case 'p':
             return keywordOrIdent(1, 4, start, "rint", TOKEN_PRINT);
+        case 't':
+            return keywordOrIdent(1, 3, start, "rue", TOKEN_TRUE);
     };
 
     Token token = {

@@ -1,11 +1,14 @@
+//TODO - first complete the full langugage parser and do error recovery
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/common.h"
-#include "value.h"
-#include "vm.h"
-#include "table.h"
-#include "object.h"
+#include "data.h"
+#include "defs.h"
+#include "decl.h"
 #define DEBUG_ON
+
+CompiledChunk compiledChunk;
+Token currentToken;
+IntArray opStack;
  static char* readFile(const char* path){
       printf("%s path--\n", path);
       FILE* file = fopen(path, "rb");
@@ -40,11 +43,13 @@ int main(int argc, const char* argv[]){
 
     VM vm;
     char *buffer = readFile(argv[1]);
-    printf("%s\n", buffer);
-    /*initVm(&vm, "let x = 1; let y = 2; let z = x + y; print z;\0");*/
-    
+
     initVm(&vm, buffer);
+    /*compile(buffer);*/
     interpret(&vm);
+    
+
+    
 #ifdef DEBUG_ON
     debugTable(&vm.globals, 1);
 #endif

@@ -1,7 +1,7 @@
-#include "object.h"
-#include "stdlib.h"
-#include "table.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include "defs.h"
+#include "decl.h"
 
 static uint32_t hashString(const char *key, int length){
     

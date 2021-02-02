@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "int_array.h"
-
+#include "../defs.h"
+#include "../decl.h"
 static const int GROW_FACTOR = 2;
 
 void initIntArray(IntArray *intArray, int initialCapacity){

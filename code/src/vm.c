@@ -1,12 +1,9 @@
 #include <bits/stdint-uintn.h>
 #include <stdio.h>
-#include "object.h"
-#include "table.h"
-#include "value.h"
-#include "vm.h"
-#include "compiler.h"
-#include "utils/int_array.h"
-#include "utils/value_array.h"
+#include "data.h"
+#include "defs.h"
+#include "decl.h"
+
 
 typedef uint8_t (*FuncOp)();
 
@@ -17,13 +14,13 @@ typedef enum{
 
 uint32_t* code;
 ValueArray* valueStack;
-CompiledChunk compiledChunk;
 Table* globals;
+
 
 void initVm(VM *vm, char* source){
     
-    compiledChunk = compile(source);
-    vm->vmCode = compiledChunk.vmCode->values;
+    compile(source);
+    vm->vmCode = compiledChunk.vmCode.values;
     code = vm->vmCode;
     initValueArray(&vm->valueStack, 20);
     valueStack = &vm->valueStack;
@@ -33,8 +30,8 @@ void initVm(VM *vm, char* source){
 
 void freeVm(VM* vm){
     freeValueArray(&vm->valueStack);
-    freeValueArray(compiledChunk.constants);
-    freeIntArray(compiledChunk.vmCode);
+    freeValueArray(&(compiledChunk.constants));
+    freeIntArray(&(compiledChunk.vmCode));
     freeTable(&(vm->globals));
 }
 
@@ -84,21 +81,53 @@ static uint8_t setGlobal(){
     code++;
     Value a = popValue(valueStack);
 
-    tableSet(globals, ((ObjString*)compiledChunk.constants->values[*code++].as.obj), &a);
+    tableSet(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
+    return INTERPRET_OK;
+}
+
+static uint8_t setGlobalUndefined(){
+    code++;
+    Value a = {
+        UNDEFINED
+    };
+    tableSet(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
     return INTERPRET_OK;
 }
 
 static uint8_t getGlobal(){
     code++;
     Value a;
-    tableGet(globals, (ObjString*)((compiledChunk.constants->values[*code++]).as.obj), &a);
+    tableGet(globals, (ObjString*)((compiledChunk.constants.values[*code++]).as.obj), &a);
     pushValue(valueStack, a);
+    return INTERPRET_OK;
+}
+
+static uint8_t op_true(){
+    code++;
+    Value value = {
+        BOOL,
+        {
+            .iNumber = 1
+        }
+    };
+    pushValue(valueStack, value);
+    return INTERPRET_OK;
+}
+static uint8_t op_false(){
+    code++;
+    Value value = {
+        BOOL,
+        {
+            .iNumber = 0
+        }
+    };
+    pushValue(valueStack, value);
     return INTERPRET_OK;
 }
 
 static uint8_t readInt(){
     code++;
-    pushValue(valueStack, compiledChunk.constants->values[*code++]);
+    pushValue(valueStack, compiledChunk.constants.values[*code++]);
 
     return INTERPRET_OK;
 }
@@ -237,9 +266,9 @@ static uint8_t bitwise_and(){
 
 static uint8_t add(){
 
+    
     Value b = popValue(valueStack);
     Value a = popValue(valueStack);
-    printf("size: %d\n", valueStack->count);
     
     uint8_t vType = a.type + b.type;
 
@@ -736,15 +765,14 @@ static uint8_t is_not_equal(){
 
 static uint8_t print(){
     Value value = popValue(valueStack);
-
-
-
     if(!value.type){
         printf("%d\n", value.as.iNumber);
     }else if(value.type == 1){
         printf("%s\n", value.as.iNumber == 0 ? "false" : "true");
     }else if(value.type == 2){
         printf("%f\n", value.as.fNumber);
+    }else{
+        printf("undefined\n");
     }
     code++;
     return INTERPRET_OK;
@@ -784,7 +812,10 @@ FuncOp funcs[] = {
     [OP_RIGHT_SHIFT] = right_shift,
     [OP_READ_INT] = readInt,
     [OP_TABLE_SET] = setGlobal,
+    [OP_TABLE_SET_UNDEFINED] = setGlobalUndefined,
     [OP_TABLE_GET] = getGlobal,
+    [OP_TRUE] = op_true,
+    [OP_FALSE] = op_false,
     [OP_EOF] = eof
 };
 

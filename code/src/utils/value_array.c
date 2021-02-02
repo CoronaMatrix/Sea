@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "value_array.h"
-#include "../value.h"
+#include "../defs.h"
+#include "../decl.h"
 
 static const int GROW_FACTOR = 2;
 void initValueArray(ValueArray *valueArray, int initialCapacity){
