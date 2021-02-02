@@ -47,10 +47,18 @@ static void varDeclaration(){
 
 static void assignmentStatement(){
     // token is a identifier
+
+    int length = currentToken.length;
+    const char* identifierName = currentToken.value.string;
     scan_into();
     matchsr(TOKEN_EQUAL, "=");
     expression();
     // Assign value to identifier;
+    int index = findIdentifier(identifierName, length);
+    if(index > -1){
+        // identifier is declared
+        emit2(OP_TABLE_SET, index);
+    }
 }
 
 void statements(){

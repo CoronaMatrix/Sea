@@ -26,6 +26,7 @@ void freeVm(VM* vm);
 
 void interpret(VM* vm);
 
+// parser.c
 int match(int tokenType);
 int matchs(int tokenType);
 int matchsr(int tokenType, const char* whatMsg);
@@ -35,9 +36,12 @@ void scan_into();
 int m_semi();
 int m_eof();
 
+//-----
+
 void expression();
 void statements();
 void emit(uint32_t op);
 void emit2(uint32_t op1, uint32_t op2);
 void compile(char *buffer);
+int findIdentifier(const char* identifierName, int length);
 #endif

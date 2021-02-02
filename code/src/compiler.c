@@ -19,6 +19,19 @@ void emit2(uint32_t op1, uint32_t op2){
     pushIntArray(&(compiledChunk.vmCode), op2);
 }
 
+int findIdentifier(const char* identifierName, int length){
+
+    for(int i = 0; i < compiledChunk.constants.count; i++){
+        if(compiledChunk.constants.values[i].type == STRING){
+            ObjString* string = (ObjString*)compiledChunk.constants.values[i].as.obj;
+            if(!memcmp(identifierName, string->chars, length)){
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 void compile(char *buffer){
 
     initScanner(buffer);

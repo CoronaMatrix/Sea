@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "defs.h"
 #include "decl.h"
 #include "data.h"
@@ -76,25 +77,14 @@ static void arithmeticOp(){
     }
 }
 
-int findIdentifier(const char* identifierName, int length){
-
-    for(int i = 0; i < compiledChunk.constants.count; i++){
-        if(compiledChunk.constants.values[i].type == STRING){
-            ObjString* string = (ObjString*)compiledChunk.constants.values[i].as.obj;
-            if(!memcmp(identifierName, string->chars, length)){
-                return i;
-            }
-        }
-    }
-    return -1;
-}
 
 static void identifier(){
     int index = findIdentifier(currentToken.value.string, currentToken.length);
     if(index > -1){
         emit2(OP_TABLE_GET, index);
     }else{
-
+        printf("Undeclared identifier\n");
+        exit(1);
 
     }
     /*printf("Identifier is undefined!\n");*/

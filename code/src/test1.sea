@@ -1,2 +1,3 @@
-let y;
-print y;
+let myAge = 4;
+myAge = myAge - 3;
+print myAge;

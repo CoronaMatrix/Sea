@@ -54,14 +54,13 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
         return TRUE;
      }
 
-    /*if(!(memcmp(entry->key, key, key->length))){*/
-        /*// keys are same override*/
-        /*entry->value = *value;*/
-        /*key->dist = entry->key->dist;*/
-        /*table->count++;*/
-        /*printf("keys are same\n");*/
-        /*return TRUE;*/
-    /*}*/
+    if(!(memcmp(entry->key, key, key->length))){
+        // keys are same override
+        entry->value = *value;
+        key->dist = entry->key->dist;
+        printf("keys are same\n");
+        return TRUE;
+    }
 
     for(int i = 0, j = table->capacity - 1; i < j; i++, j--){
         if((table->entries + i)->key == NULL){
@@ -139,6 +138,10 @@ void debugTable(Table* table, int printDist){
                         break;
                     case FLOAT:
                         printf("V: %f}\n", entry->value.as.fNumber);
+                        break;
+                    case UNDEFINED:
+                        printf("V: %s}\n", "undefined");
+                        break;
                 }
             }else{
                 printf("empty slot\n");

@@ -1,4 +1,5 @@
 //TODO - first complete the full langugage parser and do error recovery
+// TODO - improve hash table implementation
 #include <stdio.h>
 #include <stdlib.h>
 #include "data.h"
