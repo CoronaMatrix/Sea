@@ -46,7 +46,9 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
 
 
     Entry* entry = &(table->entries[key->hash % (table->capacity)]);
+    printf("key - %s, mod: %d\n", key->chars, key->hash % table->capacity);
     if(entry->key == NULL){
+        printf("null\n");
         entry->key = key;
         entry->value = *value;
         key->dist = key->hash % table->capacity;

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "defs.h"
 #include "decl.h"
@@ -10,6 +11,7 @@ static uint32_t hashString(const char *key, int length){
         hash ^= key[i];
         hash *= 16777619;
     }
+    printf("hash: %d\n", hash);
     return hash;
 }
 
@@ -19,6 +21,7 @@ ObjString* allocateString(char *chars, int length){
     string->chars = chars;
     string->dist = GOLD_NUMBER;
     string->length = length;
+    string->hash = hash;
     Obj obj = {
        OBJ_STRING 
     };
