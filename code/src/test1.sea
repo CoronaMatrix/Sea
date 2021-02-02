@@ -1,3 +1,2 @@
-let myAge = 4;
-myAge = myAge - 3;
-print myAge;
+let x = 4;
+print (x = 3) + (x = 4) + 4;

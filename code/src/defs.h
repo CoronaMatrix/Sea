@@ -150,6 +150,7 @@ typedef enum{
     OP_TABLE_SET,
     OP_TABLE_SET_UNDEFINED,
     OP_TABLE_GET,
+    OP_TABLE_UPDATE,
     OP_TRUE,
     OP_FALSE,
     OP_EOF

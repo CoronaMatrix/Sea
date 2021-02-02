@@ -17,11 +17,55 @@ ValueArray* valueStack;
 Table* globals;
 
 
+static void debugVmCode(){
+    int i = 0;
+    printf("code - { ");
+    while(*(code+i) != OP_EOF){
+        switch(*(code + i)){
+            case OP_READ_INT:
+                i++;
+                printf("%s from index_%d, ", "read_int", *(code+i));
+                break;
+            case OP_TABLE_GET:
+                i++;
+                printf("%s from index_%d, ", "table_get", *(code+i));
+                break;
+            case OP_TABLE_SET:
+                i++;
+                printf("%s from index_%d, ", "table_set", *(code+i));
+                break;
+            case OP_TABLE_SET_UNDEFINED:
+                i++;
+                printf("%s from index_%d, ", "table_set_undefined", *(code+i));
+                break;
+            case OP_TABLE_UPDATE:
+                i++;
+                printf("%s from index_%d, ", "table_update", *(code+i));
+                break;
+            case OP_ASSIGN:
+                i++;
+                printf("%s from index_%d, ", "assign", *(code+i));
+                break;
+            case OP_ADD:
+                printf("%s, ", "add");
+                break;
+            default:
+                printf("default, %d, ", *(code + i));
+                
+
+        }
+        i++;
+    }
+    printf("}\n");
+}
+
+
 void initVm(VM *vm, char* source){
     
     compile(source);
     vm->vmCode = compiledChunk.vmCode.values;
     code = vm->vmCode;
+    debugVmCode();
     initValueArray(&vm->valueStack, 20);
     valueStack = &vm->valueStack;
     initTable(&(vm->globals));
@@ -82,6 +126,14 @@ static uint8_t setGlobal(){
     Value a = popValue(valueStack);
 
     tableSet(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
+    return INTERPRET_OK;
+}
+
+static uint8_t updateGlobal(){
+    code++;
+    Value a = popValue(valueStack);
+
+    tableUpdate(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
     return INTERPRET_OK;
 }
 
@@ -780,6 +832,7 @@ static uint8_t print(){
 
 static uint8_t assign(){
     code++;
+    tableUpdate(globals, (ObjString*)((compiledChunk.constants.values[*code++]).as.obj), peekValueArray(valueStack));
     return INTERPRET_OK;
 }
 
@@ -813,6 +866,7 @@ FuncOp funcs[] = {
     [OP_READ_INT] = readInt,
     [OP_TABLE_SET] = setGlobal,
     [OP_TABLE_SET_UNDEFINED] = setGlobalUndefined,
+    [OP_TABLE_UPDATE] = updateGlobal,
     [OP_TABLE_GET] = getGlobal,
     [OP_TRUE] = op_true,
     [OP_FALSE] = op_false,
@@ -825,5 +879,8 @@ FuncOp funcs[] = {
 
 void interpret(VM *vm){
     
-    while(funcs[*code](vm->valueStack) == INTERPRET_OK);
+    while(funcs[*code](vm->valueStack) == INTERPRET_OK){
+    }
+
+    
 }

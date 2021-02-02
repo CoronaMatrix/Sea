@@ -17,6 +17,9 @@ void initValueArray(ValueArray *valueArray, int initialCapacity){
 void freeValueArray(ValueArray *valueArray){
     free(valueArray->values);
 }
+Value* peekValueArray(ValueArray* valueArray){
+    return valueArray->values + (valueArray->count - 1);
+}
 
 uint32_t pushValue(ValueArray *valueArray, Value value){
     

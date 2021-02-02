@@ -38,9 +38,11 @@ void compile(char *buffer){
     initIntArray(&opStack, 10);
     
     initIntArray(&(compiledChunk.vmCode), 50);
+    initIntArray(&indexes, 10);
     initValueArray(&(compiledChunk.constants), 10);
     statements();
     freeIntArray(&opStack);
+    freeIntArray(&indexes);
     free(buffer);
 }
 

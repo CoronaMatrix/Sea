@@ -57,7 +57,8 @@ static void assignmentStatement(){
     int index = findIdentifier(identifierName, length);
     if(index > -1){
         // identifier is declared
-        emit2(OP_TABLE_SET, index);
+        emit2(OP_TABLE_UPDATE, index);
+
     }
 }
 

@@ -54,13 +54,6 @@ Bool tableSet(Table *table, ObjString *key, Value *value){
         return TRUE;
      }
 
-    if(!(memcmp(entry->key, key, key->length))){
-        // keys are same override
-        entry->value = *value;
-        key->dist = entry->key->dist;
-        printf("keys are same\n");
-        return TRUE;
-    }
 
     for(int i = 0, j = table->capacity - 1; i < j; i++, j--){
         if((table->entries + i)->key == NULL){
@@ -96,6 +89,11 @@ Bool tableGet(Table *table, ObjString *key, Value* value){
 
     *value = entry->value;
     return TRUE;
+}
+
+void tableUpdate(Table* table, ObjString *key, Value *value){
+    Entry *entry = table->entries  + key->dist;
+    entry->value = *value;
 }
 
 // It is caller responsibility to delete allocated memory of key and value if it is a obj
@@ -149,3 +147,5 @@ void debugTable(Table* table, int printDist){
         }
     }
 }
+
+

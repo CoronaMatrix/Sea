@@ -8,4 +8,5 @@
 extern Token currentToken;
 extern CompiledChunk compiledChunk;
 extern IntArray opStack;
+extern IntArray indexes;
 #endif

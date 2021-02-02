@@ -10,6 +10,7 @@
 CompiledChunk compiledChunk;
 Token currentToken;
 IntArray opStack;
+IntArray indexes;
  static char* readFile(const char* path){
       printf("%s path--\n", path);
       FILE* file = fopen(path, "rb");
