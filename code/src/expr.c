@@ -6,6 +6,11 @@
 #include "data.h"
 
 
+// TODO - identify unary minus inside expr not in scanner [serious]
+
+
+int assign_lg;
+int exprAssign = 0;
 typedef enum{
     ASSIGN = 0,
     BITWISE_OR = 1,
@@ -29,7 +34,6 @@ typedef enum{
     BITWISE_NOT = 9
 } OpPrec;
 
-
 typedef void (*ParseFun)();
 
 OpPrec precendence[] = {
@@ -42,6 +46,8 @@ OpPrec precendence[] = {
     [TOKEN_STAR] = MULTIPLY,
     [TOKEN_SLASH] = DIVIDE,
     [TOKEN_MODULO] = MODULO,
+    [OP_ASSIGN_LOCAL] = ASSIGN,
+    [OP_ASSIGN_GLOBAL] = ASSIGN,
 
     [TOKEN_EQUAL] = ASSIGN,
     [TOKEN_EQUAL_EQUAL] = EQUAL,
@@ -69,6 +75,8 @@ int associativity[] = {
     [TOKEN_MODULO] = 1,
 
     [TOKEN_EQUAL] = 0,
+    [OP_ASSIGN_GLOBAL] = 0,
+    [OP_ASSIGN_LOCAL] = 0,
     [TOKEN_EQUAL_EQUAL] = 0,
     [TOKEN_BANG] = 0,
     [TOKEN_BANG_EQUAL] = 0,
@@ -87,43 +95,36 @@ static void intNumber(){
             .iNumber = currentToken.value.number
         }
     };
-   emit2(OP_READ_INT, pushValue(&(compiledChunk.constants), intValue));
+   emit2(OP_READ_INT, pushValue(&(compiledChunk.constants), intValue), 0);
    scan_into();
 }
 
 static void booleanOp(){
-    emit(match(TOKEN_TRUE) ? OP_TRUE : OP_FALSE);
+    emit(match(TOKEN_TRUE) ? OP_TRUE : OP_FALSE, 0);
     scan_into();
-}
-
-static void assignOp(){
-    // Just change OP_STACK_GET to OP_STACK_SET
-    
-    //identifier index
-    int index = popIntArray(&(compiledChunk.vmCode));
-    // TODO check for some possible syntax errors like let x = =y;
-    // Assuming that code is correct
-    popIntArray(&(compiledChunk.vmCode));
-    pushIntArray(&(compiledChunk.vmCode), index);
 }
 
 
 static void arithmeticOp(){
+    int tokenType = exprAssign > 0 ? assign_lg : currentToken.type;
+    
    if(opStack.count == 0){
-        pushIntArray(&opStack, currentToken.type);
+       pushIntArray(&opStack, tokenType);
     }else{
         // here we checking for precedence of op on stack >= precedence of current o
     
-        while(!match(TOKEN_OPEN_PAREN) && (precendence[peekIntArray(&opStack)] + associativity[currentToken.type] > precendence[currentToken.type])){
+        while(!match(TOKEN_OPEN_PAREN) && (precendence[peekIntArray(&opStack)] + associativity[tokenType] > precendence[tokenType])){
             /*printf("runs\n");*/
             int op_code = popIntArray(&opStack);
-            if(op_code == TOKEN_EQUAL){
-                emit2(op_code, popIntArray(&indexes));
+            if(op_code == OP_ASSIGN_LOCAL || op_code == OP_ASSIGN_GLOBAL){
+                emit2(op_code, popIntArray(&indexes), 0);
             }else{
-                emit(op_code);
+                emit(op_code, 0);
             }
         }
-        pushIntArray(&opStack, currentToken.type);
+
+        pushIntArray(&opStack, tokenType);
+        
     }
    scan_into();
 }
@@ -131,20 +132,26 @@ static void arithmeticOp(){
 
 
 static void identifier(){
-    int index = findIdentifier(currentToken.value.string, currentToken.length);
+    
+    int index = getSymbol(scopeDepth > -1 ? &localSymTable : &globalSymTable, scopeDepth > -1 ? -1 : 1,
+            currentToken.value.string, currentToken.length);
+    
+    if(index < 0 && scopeDepth > -1){
+        
+        index = getSymbol(&localSymTable, 1, currentToken.value.string, currentToken.length);
+    }
+
     scan_into();
     if(match(TOKEN_EQUAL)){
-        // assignment expression
-        /*scan_into();*/
-        /*expression();*/
-        /*emit2(OP_ASSIGN, index);*/
-        
+        printf("adsf %d\n", index);
+        assign_lg = scopeDepth > -1 ? OP_ASSIGN_LOCAL : OP_ASSIGN_GLOBAL;
         pushIntArray(&indexes, index);
+        exprAssign = 1;
         arithmeticOp();
+        exprAssign = 0;
     }else{
-
         if(index > -1){
-            emit2(OP_TABLE_GET, index);
+            emit2(scopeDepth > -1 ? OP_LOCAL_GET : OP_TABLE_GET, index, 0);
         }else{
             printf("Undeclared identifier\n");
             exit(1);
@@ -163,11 +170,12 @@ static void openParen(){
 static void closeParen(){
     int op_code = peekIntArray(&opStack);
     while(peekIntArray(&opStack) != TOKEN_OPEN_PAREN && opStack.count != 0){
-        if(op_code == TOKEN_EQUAL){
+        if(op_code == OP_ASSIGN_LOCAL || op_code == OP_ASSIGN_GLOBAL){
+            emit2(popIntArray(&opStack), popIntArray(&indexes), 0);
             
-            emit2(popIntArray(&opStack), popIntArray(&indexes));
         }else{
-            emit(popIntArray(&opStack));
+            printf("called\n");
+            emit(popIntArray(&opStack), 0);
         }
     }
     popIntArray(&opStack);
@@ -176,6 +184,8 @@ static void closeParen(){
 
 ParseFun parse[] = {
     [TOKEN_EQUAL] = arithmeticOp,
+    [OP_ASSIGN_GLOBAL] = arithmeticOp,
+    [OP_ASSIGN_LOCAL] = arithmeticOp,
     [TOKEN_EQUAL_EQUAL] = arithmeticOp,
     [TOKEN_BANG_EQUAL] = arithmeticOp,
     [TOKEN_LESS] = arithmeticOp,
@@ -212,10 +222,10 @@ void expression(){
     }
     while(opStack.count > 0){
         int op_code = popIntArray(&opStack);
-        if(op_code == TOKEN_EQUAL){
-            emit2(op_code, popIntArray(&indexes));
+        if(op_code == OP_ASSIGN_LOCAL || op_code == OP_ASSIGN_GLOBAL){
+            emit2(op_code, popIntArray(&indexes), 0);
         }else{
-            emit(op_code);
+            emit(op_code,0);
         }
     }
 }

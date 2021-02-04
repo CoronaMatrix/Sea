@@ -11,6 +11,8 @@ CompiledChunk compiledChunk;
 Token currentToken;
 IntArray opStack;
 IntArray indexes;
+SymbolTable localSymTable;
+SymbolTable globalSymTable;
  static char* readFile(const char* path){
       printf("%s path--\n", path);
       FILE* file = fopen(path, "rb");
@@ -49,6 +51,7 @@ int main(int argc, const char* argv[]){
     initVm(&vm, buffer);
     /*compile(buffer);*/
     interpret(&vm);
+    free(buffer);
     
 
     

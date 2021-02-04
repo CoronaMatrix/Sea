@@ -42,8 +42,16 @@ int m_eof();
 
 void expression();
 void statements();
-void emit(uint32_t op);
-void emit2(uint32_t op1, uint32_t op2);
+void emit(uint32_t op, int isIndex);
+void emit2(uint32_t op1, uint32_t op2, int isIndex);
 void compile(char *buffer);
 int findIdentifier(const char* identifierName, int length);
+
+
+// sym_table.c
+void initSymbolTable(SymbolTable* symbolTable, uint32_t initialCapacity);
+void freeSymbolTable(SymbolTable* symbolTable);
+int addSymbol(SymbolTable* symbolTable, Symbol* symbol);
+int getSymbol(SymbolTable* symbolTable, int direction, const char* symbolName, int length);
+void deleteSymbols(SymbolTable* symbolTable, int count);
 #endif

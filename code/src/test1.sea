@@ -1,4 +1,8 @@
-let x = 4;
-let y = x + 3;
-y = y;
-print y;
+{
+    let x = 4;
+    let y = 3;
+    {
+        let x = 5;
+        print y = 10 + (x = 3);
+    }
+}

@@ -4,6 +4,8 @@
 #include "defs.h"
 #include "decl.h"
 
+// TODO - resolve u_minus issue [serious]
+
 
 typedef uint8_t (*FuncOp)();
 
@@ -15,6 +17,9 @@ typedef enum{
 uint32_t* code;
 ValueArray* valueStack;
 Table* globals;
+
+static int localSlot1 = -1;
+static int localSlot2 = -1;
 
 
 static void debugVmCode(){
@@ -42,12 +47,33 @@ static void debugVmCode(){
                 i++;
                 printf("%s from index_%d, ", "table_update", *(code+i));
                 break;
+            case OP_LOCAL_GET:
+                i++;
+                printf("%s from slot_%d, ", "get_local", *(code+i));
+                break;
+            case OP_LOCAL_SET:
+                printf("%s, ", "set_local");
+                break;
+            case OP_ASSIGN_LOCAL:
+                i++;
+                printf("%s from index_%d, ", "assign_local", *(code+i));
+                break;
+            case OP_ASSIGN_GLOBAL:
+                i++;
+                printf("%s from index_%d, ", "assign_global", *(code+i));
+                break;
             case OP_ASSIGN:
                 i++;
-                printf("%s from index_%d, ", "assign", *(code+i));
+                printf("%s from index_%d, ", "assinl", *(code+i));
                 break;
             case OP_ADD:
                 printf("%s, ", "add");
+                break;
+            case OP_U_MINUS:
+                printf("%s, ", "u_minus");
+                break;
+            case OP_PRINT:
+                printf("%s, ", "print");
                 break;
             default:
                 printf("default, %d, ", *(code + i));
@@ -420,25 +446,13 @@ static uint8_t minus(){
 
 }
 static uint8_t u_minus(){
-    Value a = popValue(valueStack);
-    if(!a.type){
+    Value *a = peekValueArray(valueStack);
+    if(!a->type){
         // number is integer
-        Value value = {
-            INTEGER,
-            {
-                .iNumber = -(a.as.iNumber)
-            }
-        };
-        pushValue(valueStack, value);
-    }else if(a.type == FLOAT){
+        a->as.iNumber = -(a->as.iNumber);
+    }else if(a->type == FLOAT){
         // number is a float
-        Value value = {
-            FLOAT,
-            {
-                .fNumber = -(a.as.fNumber)
-            }
-        };
-        pushValue(valueStack, value);
+        a->as.fNumber = -(a->as.fNumber);
     }else{
         printf("RE: Operand must be of type integer\n");
         return INTERPRET_ERROR;
@@ -815,6 +829,22 @@ static uint8_t is_not_equal(){
     return INTERPRET_OK;
 }
 
+static uint8_t getLocal(){
+    code++;
+    /*if(localSlot1 > -1){*/
+        /*localSlot1 = *(code++);*/
+    /*}else if(localSlot2 > -1){*/
+        /*localSlot2 = *(code++);*/
+    /*}*/
+    pushValue(valueStack, valueStack->values[*(code++)]);
+    return INTERPRET_OK;
+}
+
+static uint8_t setLocal(){
+    code++;
+    return INTERPRET_OK;
+    
+}
 static uint8_t print(){
     Value value = popValue(valueStack);
     if(!value.type){
@@ -830,9 +860,13 @@ static uint8_t print(){
     return INTERPRET_OK;
 }
 
-static uint8_t assign(){
+static uint8_t assignLocal(){
     code++;
-    tableUpdate(globals, (ObjString*)((compiledChunk.constants.values[*code++]).as.obj), peekValueArray(valueStack));
+    valueStack->values[*(code++)] = *peekValueArray(valueStack);
+    return INTERPRET_OK;
+}
+static uint8_t assignGlobal(){
+    code++;
     return INTERPRET_OK;
 }
 
@@ -842,7 +876,8 @@ static uint8_t eof(){
 }
 
 FuncOp funcs[] = {
-    [OP_ASSIGN] = assign,
+    [OP_ASSIGN_LOCAL] = assignLocal,
+    [OP_ASSIGN_GLOBAL] = assignGlobal,
     [OP_BITWISE_OR] = bitwise_or,
     [OP_BITWISE_XOR] = bitwise_xor,
     [OP_BITWISE_AND] = bitwise_and,
@@ -868,14 +903,13 @@ FuncOp funcs[] = {
     [OP_TABLE_SET_UNDEFINED] = setGlobalUndefined,
     [OP_TABLE_UPDATE] = updateGlobal,
     [OP_TABLE_GET] = getGlobal,
+    [OP_LOCAL_SET] = setLocal,
+    [OP_LOCAL_GET] = getLocal,
     [OP_TRUE] = op_true,
     [OP_FALSE] = op_false,
     [OP_EOF] = eof
 };
 
-/*void run(){*/
-    /*funcs[code](vm->valueStack);*/
-/*}*/
 
 void interpret(VM *vm){
     

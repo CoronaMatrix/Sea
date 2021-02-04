@@ -5,10 +5,12 @@
 #include "decl.h"
 #include "data.h"
 
+
+static void call_statement();
 static void printStatement(){
    scan_into(); 
    expression();
-   emit(OP_PRINT);
+   emit(OP_PRINT, 0);
 }
 
 
@@ -16,73 +18,90 @@ static void varDeclaration(){
     scan_into();
     matchr(TOKEN_IDENTIFIER, "Identifier");
     // there is a identifier
-    int length = currentToken.length;
-    const char* identifierName = currentToken.value.string; 
+    Symbol symbol = {
+        currentToken.value.string,
+        currentToken.length,
+        scopeDepth
+    };
     scan_into();
     if(m_semi()){
-        // declare global with undefined value
-        
-        char *chars = malloc(length + 1);
-        memcpy(chars, identifierName, length);
-        chars[length] = '\0';
-        ObjString* string = allocateString(chars, length);
-        Value tempValue;
-        tempValue.type = STRING;
-        tempValue.as.obj = (Obj*)string;
-        emit2(OP_TABLE_SET_UNDEFINED, pushValue(&(compiledChunk.constants), tempValue));
+        if(scopeDepth < 0){
+            addSymbol(&globalSymTable, &symbol);
+        }else{
+            // local
+            addSymbol(&localSymTable, &symbol);
+        }
 
     }else if(matchs(TOKEN_EQUAL)){
         expression();
-        // declare global with a value
-        char *chars = malloc(length + 1);
-        memcpy(chars, identifierName, length);
-        chars[length] = '\0';
-        ObjString* string = allocateString(chars, length);
-        Value tempValue;
-        tempValue.type = STRING;
-        tempValue.as.obj = (Obj*)string;
-        emit2(OP_TABLE_SET, pushValue(&(compiledChunk.constants), tempValue));
+        symbol.slotNumber = slotNumber;
+        if(scopeDepth < 0){
+            emit2(OP_TABLE_SET, addSymbol(&globalSymTable, &symbol), 0);
+        }else{
+            addSymbol(&localSymTable, &symbol);
+            emit(OP_LOCAL_SET, 0);
+            
+        }
     }
 }
 
 static void assignmentStatement(){
-    // token is a identifier
+    printf("assignmentStatement\n");
+}
 
-    int length = currentToken.length;
-    const char* identifierName = currentToken.value.string;
+static void error(){
+    printf("Syntax error: \n");
+    exit(1);
+}
+
+// TODO- take look at this method of parsing statements and if necessary change the architecture
+static void block(){
     scan_into();
-    matchsr(TOKEN_EQUAL, "=");
-    expression();
-    // Assign value to identifier;
-    int index = findIdentifier(identifierName, length);
-    if(index > -1){
-        // identifier is declared
-        emit2(OP_TABLE_UPDATE, index);
+    int prevCount = localSymTable.count;
+    while(!match(TOKEN_CLOSE_BRACE)){
+        wrongm(TOKEN_EOF, "expected '}' but got end of line");
+        call_statement();
+    }
+    // deleting locals from localSymTable
+    localSymTable.count = prevCount;
+    scan_into();
+}
 
+static void call_statement(){
+
+    switch(currentToken.type){
+        case TOKEN_OPEN_BRACE:
+            scopeDepth++;
+            block();
+            scopeDepth--;
+
+            break;
+        case TOKEN_PRINT:
+             printStatement();
+             matchsr(TOKEN_SEMICOLON, ";");
+             break;
+        case TOKEN_LET:
+             varDeclaration();
+             matchsr(TOKEN_SEMICOLON, ";");
+             break;
+        case TOKEN_IDENTIFIER:
+             assignmentStatement();
+             matchsr(TOKEN_SEMICOLON, ";");
+             break;
+        default:
+             error();
+             break;
     }
 }
+
+
+
 
 void statements(){
     scan_into();
     while(!m_eof()){
-        switch(currentToken.type){
-            case TOKEN_PRINT:
-                printStatement();
-                matchsr(TOKEN_SEMICOLON, ";");
-                break;
-            case TOKEN_LET:
-                varDeclaration();
-                matchsr(TOKEN_SEMICOLON, ";");
-                break;
-            case TOKEN_IDENTIFIER:
-                assignmentStatement();
-                matchsr(TOKEN_SEMICOLON, ";");
-                break;
-            default:
-                printf("Syntax error :\n");
-                return;
-        }
+        call_statement();
     }
     // end of file
-    emit(OP_EOF);
+    emit(OP_EOF, 0);
 }

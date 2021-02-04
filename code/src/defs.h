@@ -73,9 +73,22 @@ typedef struct{
 } ValueArray;
 
 
+typedef struct{
+    const char* name;
+    uint32_t length;
+    uint32_t depth;
+    int slotNumber;
+} Symbol;
+
+typedef struct{
+    int capacity;
+    int count;
+    Symbol* symbols;
+}SymbolTable;
+
 typedef enum{
 
-    TOKEN_EQUAL,
+    TOKEN_EQUAL = 0,
     TOKEN_BITWISE_OR,
     TOKEN_BITWISE_XOR,
     TOKEN_BITWISE_AND,
@@ -127,37 +140,40 @@ typedef struct{
 } Token;
 
 typedef enum{
-    OP_ASSIGN,
-    OP_BITWISE_OR,
-    OP_BITWISE_XOR,
-    OP_BITWISE_AND,
-    OP_EQUAL,
-    OP_NOT_EQUAL,
-    OP_LESS,
-    OP_GREATER,
-    OP_LESS_EQUAL,
-    OP_GREAER_EQUAL,
-    OP_LEFT_SHIFT,
-    OP_RIGHT_SHIFT,
-    OP_ADD,
-    OP_MINUS,
-    OP_DIVIDE,
-    OP_MULTIPLY,
-    OP_MODULO,
-    OP_U_MINUS,
-    OP_NOT,
-    OP_BITWISE_NOT,
-    OP_PRINT,
-    OP_READ_INT,
+    OP_ASSIGN = TOKEN_EQUAL,
+    OP_BITWISE_OR = TOKEN_BITWISE_OR,
+    OP_BITWISE_XOR = TOKEN_BITWISE_XOR,
+    OP_BITWISE_AND = TOKEN_BITWISE_AND,
+    OP_EQUAL = TOKEN_EQUAL_EQUAL,
+    OP_NOT_EQUAL = TOKEN_BANG_EQUAL,
+    OP_LESS = TOKEN_LESS,
+    OP_GREATER = TOKEN_GREATER,
+    OP_LESS_EQUAL = TOKEN_LESS_EQUAL,
+    OP_GREAER_EQUAL = TOKEN_GREATER_EQUAL,
+    OP_LEFT_SHIFT = TOKEN_LEFT_SHIFT,
+    OP_RIGHT_SHIFT = TOKEN_RIGHT_SHIFT,
+    OP_ADD = TOKEN_PLUS,
+    OP_MINUS = TOKEN_MINUS,
+    OP_DIVIDE = TOKEN_SLASH,
+    OP_MULTIPLY = TOKEN_STAR,
+    OP_MODULO = TOKEN_MODULO,
+    OP_U_MINUS = TOKEN_U_MINUS,
+    OP_NOT = TOKEN_BANG,
+    OP_BITWISE_NOT = TOKEN_BITWISE_NOT,
+    OP_PRINT = TOKEN_PRINT,
+    OP_READ_INT = TOKEN_INTEGER,
+    OP_TRUE = TOKEN_TRUE,
+    OP_FALSE = TOKEN_FALSE,
+    OP_EOF = TOKEN_EOF,
+    OP_LOCAL_SET,
+    OP_LOCAL_GET,
     OP_TABLE_SET,
     OP_TABLE_SET_UNDEFINED,
     OP_TABLE_GET,
     OP_TABLE_UPDATE,
-    OP_TRUE,
-    OP_FALSE,
-    OP_EOF
+    OP_ASSIGN_LOCAL,
+    OP_ASSIGN_GLOBAL
 } OpCode;
-
 
 typedef struct{
     uint32_t *vmCode;
