@@ -225,6 +225,12 @@ Token scanToken(){
         case ')':
             previousToken = TOKEN_CLOSE_PAREN;
             return makeToken(TOKEN_CLOSE_PAREN, lineNumber, value);
+        case '{':
+            previousToken = TOKEN_OPEN_BRACE;
+            return makeToken(TOKEN_OPEN_BRACE, lineNumber, value);
+        case '}':
+            previousToken = TOKEN_CLOSE_BRACE;
+            return makeToken(TOKEN_CLOSE_BRACE, lineNumber, value);
 
         case ';':
             previousToken = TOKEN_SEMICOLON;
@@ -233,6 +239,7 @@ Token scanToken(){
         default:
             if(isDigit(*source)) return scanNumber();
             else if(isAlpha(*source)) return scanIdentifier();
+            // TODO-Do some error checking
     }
 
 }

@@ -1,8 +1,4 @@
-let myAge = 34;
-let fatherAge = myAge + 10;
-let brothersAge = (myAge = 20) + (fatherAge = 10) + 4;
-
-let age1 = 12;
-let age2 = 15;
-let age3 = 11;
-print brothersAge;
+let x = 4;
+let y = x + 3;
+y = y;
+print y;
