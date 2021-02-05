@@ -1,9 +1,19 @@
 # Sea Programming language (currently in development)
 
 ```
-let myAge = 4;
-myAge = myAge - 3;
-print myAge;
-
-output - 3
+{
+    let x = 3;
+    {
+        let y = 2;
+        {
+            let z = 4;
+            let w = z;
+            print z;
+        }
+    }
+    let z  = 1;
+    print z;
+    print x;
+    
+}
 ```
