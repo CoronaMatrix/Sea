@@ -1,5 +1,6 @@
 # Sea Programming language (currently in development)
 
+#Scopes
 ```
 {
     let x = 3;
@@ -17,6 +18,8 @@
     
 }
 ```
+
+#IF-ELSE
 
 ```
 let percentage = 40;
@@ -37,5 +40,36 @@ if(percentage > 30){
     }
 }else{
     print 20;
+}
+```
+# Finding factorials upto 10 
+
+```
+let upto = 0;
+while(upto < 11){
+    let fact = 1;
+    let i = upto;
+    while(i > 1){
+       fact = fact * i;
+       i = i - 1;
+    }
+    print fact;
+    upto = upto + 1;
+}
+```
+
+#Finding Fibonacci numbers upto 30
+```
+let upto = 0;
+
+let fibPrev = 1;
+let fibNext = 1;
+while(upto <= 30){
+    if(upto > 1){
+        fibNext = fibPrev + fibNext;
+        fibPrev = fibNext;
+    }
+    print fibNext;
+    upto = upto+1;
 }
 ```
