@@ -24,29 +24,53 @@ static void varDeclaration(){
         scopeDepth
     };
     scan_into();
+    int undefined= 0;
     if(m_semi()){
-        if(scopeDepth < 0){
-            addSymbol(&globalSymTable, &symbol);
-        }else{
-            // local
-            addSymbol(&localSymTable, &symbol);
-        }
+        undefined = 1;
 
     }else if(matchs(TOKEN_EQUAL)){
         expression();
-        symbol.slotNumber = slotNumber;
-        if(scopeDepth < 0){
-            emit2(OP_TABLE_SET, addSymbol(&globalSymTable, &symbol), 0);
-        }else{
-            addSymbol(&localSymTable, &symbol);
-            emit(OP_LOCAL_SET, 0);
-            
-        }
+    }else{
+        printf("Syntax error: Wrong way to initialize variables\n");
+        exit(1);
     }
+
+    if(undefined){
+        emit(OP_NIL, 0);
+
+    }
+    if(scopeDepth < 0){
+        Value globalVar;
+        symbol.slotNumber = pushValue(&(compiledChunk.constants), globalVar);
+        if(addSymbol(&symTable, &symbol) < 0){
+            printf("Identifier already defined\n");
+            exit(1);
+        }
+        emit2(OP_GLOBAL_SET, symbol.slotNumber, 0);
+    }else{
+        // for local
+        symbol.slotNumber = slotNumber;
+        if(addSymbol(&symTable, &symbol) < 0){
+            printf("Identifier already defined\n");
+            exit(1);
+        }
+        emit(OP_LOCAL_SET, 0);
+    }
+
 }
 
 static void assignmentStatement(){
-    printf("assignmentStatement\n");
+    int slot = getSymbol(&symTable, scopeDepth < 0 ? 1 : -1, currentToken.value.string, currentToken.length);
+    if(slot < 0){
+        printf("Undeclared identifier\n");
+        exit(1);
+    }
+    scan_into();
+
+
+    matchsr(TOKEN_EQUAL, "'='");
+    expression();
+    emit2(symTable.isGlobal ? OP_GLOBAL_SET : OP_UPDATE_LOCAL, slot, 0);
 }
 
 static void error(){
@@ -57,13 +81,22 @@ static void error(){
 // TODO- take look at this method of parsing statements and if necessary change the architecture
 static void block(){
     scan_into();
-    int prevCount = localSymTable.count;
+    int prevCount = symTable.count;
+    int prevSlotNumber = slotNumber;
+    int prevConstsCount = compiledChunk.constants.count;
+    /*printf("prevSlotNumber - %d\n", prevSlotNumber);*/
     while(!match(TOKEN_CLOSE_BRACE)){
         wrongm(TOKEN_EOF, "expected '}' but got end of line");
         call_statement();
     }
     // deleting locals from localSymTable
-    localSymTable.count = prevCount;
+    emit2(OP_LEAVE, prevCount, 0);
+    symTable.count = prevCount;
+    compiledChunk.constants.count = prevConstsCount;
+    slotNumber = prevSlotNumber;
+
+    /*printf("currentSlotNumber - %d\n", slotNumber);*/
+
     scan_into();
 }
 

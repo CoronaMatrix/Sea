@@ -16,7 +16,6 @@ typedef enum{
 
 uint32_t* code;
 ValueArray* valueStack;
-Table* globals;
 
 static int localSlot1 = -1;
 static int localSlot2 = -1;
@@ -31,21 +30,16 @@ static void debugVmCode(){
                 i++;
                 printf("%s from index_%d, ", "read_int", *(code+i));
                 break;
-            case OP_TABLE_GET:
+            case OP_GLOBAL_GET:
                 i++;
-                printf("%s from index_%d, ", "table_get", *(code+i));
+                printf("%s from index_%d, ", "global_get", *(code+i));
                 break;
-            case OP_TABLE_SET:
+            case OP_GLOBAL_SET:
                 i++;
-                printf("%s from index_%d, ", "table_set", *(code+i));
+                printf("%s from index_%d, ", "global_set", *(code+i));
                 break;
-            case OP_TABLE_SET_UNDEFINED:
-                i++;
-                printf("%s from index_%d, ", "table_set_undefined", *(code+i));
-                break;
-            case OP_TABLE_UPDATE:
-                i++;
-                printf("%s from index_%d, ", "table_update", *(code+i));
+            case OP_NIL:
+                printf("%s, ", "undefined");
                 break;
             case OP_LOCAL_GET:
                 i++;
@@ -62,6 +56,10 @@ static void debugVmCode(){
                 i++;
                 printf("%s from index_%d, ", "assign_global", *(code+i));
                 break;
+            case OP_UPDATE_LOCAL:
+                i++;
+                printf("%s from index_%d, ", "update_local", *(code+i));
+                break;
             case OP_ASSIGN:
                 i++;
                 printf("%s from index_%d, ", "assinl", *(code+i));
@@ -74,6 +72,10 @@ static void debugVmCode(){
                 break;
             case OP_PRINT:
                 printf("%s, ", "print");
+                break;
+            case OP_LEAVE:
+                i++;
+                printf("leave %d, ", *(code+i));
                 break;
             default:
                 printf("default, %d, ", *(code + i));
@@ -92,17 +94,14 @@ void initVm(VM *vm, char* source){
     vm->vmCode = compiledChunk.vmCode.values;
     code = vm->vmCode;
     debugVmCode();
-    initValueArray(&vm->valueStack, 20);
+    initValueArray(&vm->valueStack, 10);
     valueStack = &vm->valueStack;
-    initTable(&(vm->globals));
-    globals = &(vm->globals);
 }
 
 void freeVm(VM* vm){
     freeValueArray(&vm->valueStack);
     freeValueArray(&(compiledChunk.constants));
     freeIntArray(&(compiledChunk.vmCode));
-    freeTable(&(vm->globals));
 }
 
 
@@ -147,36 +146,36 @@ int falsy(Value* a){
     return 0;
 }
 
+static uint8_t nil(){
+    code++;
+    Value undefinedVar = {
+        UNDEFINED,
+        {
+            .iNumber = 0
+        }
+    };
+    pushValue(valueStack, undefinedVar);
+    return INTERPRET_OK;
+}
+
+static uint8_t leave(){
+    // free allocated memory in block
+    code++;
+    valueStack->count = *(code++);
+    return INTERPRET_OK;
+}
+
 static uint8_t setGlobal(){
     code++;
-    Value a = popValue(valueStack);
-
-    tableSet(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
+    compiledChunk.constants.values[*(code++)] = popValue(valueStack);
     return INTERPRET_OK;
 }
 
-static uint8_t updateGlobal(){
-    code++;
-    Value a = popValue(valueStack);
 
-    tableUpdate(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
-    return INTERPRET_OK;
-}
-
-static uint8_t setGlobalUndefined(){
-    code++;
-    Value a = {
-        UNDEFINED
-    };
-    tableSet(globals, ((ObjString*)compiledChunk.constants.values[*code++].as.obj), &a);
-    return INTERPRET_OK;
-}
 
 static uint8_t getGlobal(){
     code++;
-    Value a;
-    tableGet(globals, (ObjString*)((compiledChunk.constants.values[*code++]).as.obj), &a);
-    pushValue(valueStack, a);
+    pushValue(valueStack, compiledChunk.constants.values[*code++]);
     return INTERPRET_OK;
 }
 
@@ -840,6 +839,12 @@ static uint8_t getLocal(){
     return INTERPRET_OK;
 }
 
+static uint8_t updateLocal(){
+    code++;
+    valueStack->values[*(code++)] = popValue(valueStack);
+    return INTERPRET_OK;
+}
+
 static uint8_t setLocal(){
     code++;
     return INTERPRET_OK;
@@ -847,6 +852,7 @@ static uint8_t setLocal(){
 }
 static uint8_t print(){
     Value value = popValue(valueStack);
+    printf("vm_count %d\n", valueStack->count);
     if(!value.type){
         printf("%d\n", value.as.iNumber);
     }else if(value.type == 1){
@@ -867,6 +873,7 @@ static uint8_t assignLocal(){
 }
 static uint8_t assignGlobal(){
     code++;
+    compiledChunk.constants.values[*(code++)] = *peekValueArray(valueStack);
     return INTERPRET_OK;
 }
 
@@ -899,15 +906,17 @@ FuncOp funcs[] = {
     [OP_LEFT_SHIFT] = left_shift,
     [OP_RIGHT_SHIFT] = right_shift,
     [OP_READ_INT] = readInt,
-    [OP_TABLE_SET] = setGlobal,
-    [OP_TABLE_SET_UNDEFINED] = setGlobalUndefined,
-    [OP_TABLE_UPDATE] = updateGlobal,
-    [OP_TABLE_GET] = getGlobal,
+    [OP_GLOBAL_SET] = setGlobal,
+    [OP_GLOBAL_GET] = getGlobal,
+    [OP_NIL] = nil,
     [OP_LOCAL_SET] = setLocal,
     [OP_LOCAL_GET] = getLocal,
+    [OP_UPDATE_LOCAL] = updateLocal,
     [OP_TRUE] = op_true,
     [OP_FALSE] = op_false,
+    [OP_LEAVE] = leave,
     [OP_EOF] = eof
+
 };
 
 
@@ -915,6 +924,5 @@ void interpret(VM *vm){
     
     while(funcs[*code](vm->valueStack) == INTERPRET_OK){
     }
-
-    
+    printf("vm count-%d\n", valueStack->count);
 }

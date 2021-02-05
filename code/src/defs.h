@@ -76,13 +76,14 @@ typedef struct{
 typedef struct{
     const char* name;
     uint32_t length;
-    uint32_t depth;
+    int depth;
     int slotNumber;
 } Symbol;
 
 typedef struct{
     int capacity;
     int count;
+    int isGlobal;
     Symbol* symbols;
 }SymbolTable;
 
@@ -167,18 +168,18 @@ typedef enum{
     OP_EOF = TOKEN_EOF,
     OP_LOCAL_SET,
     OP_LOCAL_GET,
-    OP_TABLE_SET,
-    OP_TABLE_SET_UNDEFINED,
-    OP_TABLE_GET,
-    OP_TABLE_UPDATE,
+    OP_UPDATE_LOCAL,
+    OP_NIL,
+    OP_GLOBAL_SET,
+    OP_GLOBAL_GET,
     OP_ASSIGN_LOCAL,
-    OP_ASSIGN_GLOBAL
+    OP_ASSIGN_GLOBAL,
+    OP_LEAVE
 } OpCode;
 
 typedef struct{
     uint32_t *vmCode;
     ValueArray valueStack;
-    Table globals;
 } VM;
 
 typedef struct{

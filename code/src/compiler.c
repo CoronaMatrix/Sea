@@ -11,9 +11,6 @@
 // initial vm slot number
 int slotNumber = -1;
 int scopeDepth = -1;
-uint32_t varCount = 0;
-
-
 
 
 static int8_t slotChangeFactor[] = {
@@ -38,16 +35,17 @@ static int8_t slotChangeFactor[] = {
     [OP_LEFT_SHIFT] = -1,
     [OP_RIGHT_SHIFT] = -1,
     [OP_READ_INT] = 1,
-    [OP_TABLE_SET] = -1,
-    [OP_TABLE_SET_UNDEFINED] = 0,
-    [OP_TABLE_UPDATE] = -1,
-    [OP_TABLE_GET] = 1,
+    [OP_GLOBAL_SET] = -1,
+    [OP_GLOBAL_GET] = 1,
+    [OP_NIL] = 1,
     [OP_TRUE] = 1,
     [OP_FALSE] = 1,
     [OP_EOF] = 0,
     [OP_PRINT] = -1,
     [OP_LOCAL_GET] = 1,
     [OP_LOCAL_SET] = 0,
+    [OP_UPDATE_LOCAL] = -1,
+    [OP_LEAVE] = 0
 };
 
 
@@ -65,7 +63,7 @@ void emit2(uint32_t op1, uint32_t op2, int isIndex){
     if(!isIndex){
         slotNumber += slotChangeFactor[op1];
         /*printf("slotNumber - %d\n", slotNumber);*/
-    }
+    } 
     pushIntArray(&(compiledChunk.vmCode), op1);
     pushIntArray(&(compiledChunk.vmCode), op2);
 }
@@ -75,8 +73,7 @@ void compile(char *buffer){
 
     initScanner(buffer);
     initIntArray(&opStack, 10);
-    initSymbolTable(&localSymTable, 10);
-    initSymbolTable(&globalSymTable, 10);
+    initSymbolTable(&symTable, 10);
     initIntArray(&(compiledChunk.vmCode), 50);
     initIntArray(&indexes, 10);
     initValueArray(&(compiledChunk.constants), 10);
@@ -84,7 +81,8 @@ void compile(char *buffer){
     statements();
 
     freeIntArray(&opStack);
-    freeSymbolTable(&localSymTable);
+    free(buffer);
+    freeSymbolTable(&symTable);
     freeIntArray(&indexes);
 }
 

@@ -9,8 +9,8 @@
 // TODO - identify unary minus inside expr not in scanner [serious]
 
 
-int assign_lg;
-int exprAssign = 0;
+static int assign_lg;
+static int exprAssign = 0;
 typedef enum{
     ASSIGN = 0,
     BITWISE_OR = 1,
@@ -36,7 +36,7 @@ typedef enum{
 
 typedef void (*ParseFun)();
 
-OpPrec precendence[] = {
+static OpPrec precendence[] = {
     [TOKEN_LESS] = LESS,
     [TOKEN_LESS_EQUAL] = LESS_EQUAL,
     [TOKEN_GREATER] = GREATER,
@@ -62,7 +62,7 @@ OpPrec precendence[] = {
 
 // 0 for right and 1 for left
 // TODO - correct the associativity
-int associativity[] = {
+static int associativity[] = {
 
     [TOKEN_LESS] = 0,
     [TOKEN_LESS_EQUAL] = 0,
@@ -133,30 +133,21 @@ static void arithmeticOp(){
 
 static void identifier(){
     
-    int index = getSymbol(scopeDepth > -1 ? &localSymTable : &globalSymTable, scopeDepth > -1 ? -1 : 1,
+    int index = getSymbol(&symTable, scopeDepth > -1 ? -1 : 1,
             currentToken.value.string, currentToken.length);
-    
-    if(index < 0 && scopeDepth > -1){
-        
-        index = getSymbol(&localSymTable, 1, currentToken.value.string, currentToken.length);
+    if(index < 0){
+        printf("Undeclared identifier\n");
+        exit(1);
     }
-
     scan_into();
     if(match(TOKEN_EQUAL)){
-        printf("adsf %d\n", index);
-        assign_lg = scopeDepth > -1 ? OP_ASSIGN_LOCAL : OP_ASSIGN_GLOBAL;
+        assign_lg = symTable.isGlobal ? OP_ASSIGN_GLOBAL : OP_ASSIGN_LOCAL;
         pushIntArray(&indexes, index);
         exprAssign = 1;
         arithmeticOp();
         exprAssign = 0;
     }else{
-        if(index > -1){
-            emit2(scopeDepth > -1 ? OP_LOCAL_GET : OP_TABLE_GET, index, 0);
-        }else{
-            printf("Undeclared identifier\n");
-            exit(1);
-        }
-
+        emit2(symTable.isGlobal ? OP_GLOBAL_GET : OP_LOCAL_GET, index, 0);
     }
 }
 
@@ -174,7 +165,6 @@ static void closeParen(){
             emit2(popIntArray(&opStack), popIntArray(&indexes), 0);
             
         }else{
-            printf("called\n");
             emit(popIntArray(&opStack), 0);
         }
     }
@@ -182,7 +172,7 @@ static void closeParen(){
     scan_into();
 }
 
-ParseFun parse[] = {
+static ParseFun parse[] = {
     [TOKEN_EQUAL] = arithmeticOp,
     [OP_ASSIGN_GLOBAL] = arithmeticOp,
     [OP_ASSIGN_LOCAL] = arithmeticOp,

@@ -12,6 +12,5 @@ extern IntArray opStack;
 extern IntArray indexes;
 extern int slotNumber;
 extern int scopeDepth;
-extern SymbolTable localSymTable;
-extern SymbolTable globalSymTable;
+extern SymbolTable symTable;
 #endif
