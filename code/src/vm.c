@@ -67,6 +67,11 @@ static void debugVmCode(){
             case OP_ADD:
                 printf("%s, ", "add");
                 break;
+            case OP_LESS:
+                printf("less, ");
+                break;
+            case OP_GREATER:
+                printf("greater, ");
             case OP_U_MINUS:
                 printf("%s, ", "u_minus");
                 break;
@@ -77,6 +82,10 @@ static void debugVmCode(){
                 i++;
                 printf("leave %d, ", *(code+i));
                 break;
+            case OP_PATCH_JUMP:
+                i++;
+                printf("jump to %d, ", *(code+i));
+                break;
             default:
                 printf("default, %d, ", *(code + i));
                 
@@ -84,6 +93,7 @@ static void debugVmCode(){
         }
         i++;
     }
+    printf("eof");
     printf("}\n");
 }
 
@@ -155,6 +165,25 @@ static uint8_t nil(){
         }
     };
     pushValue(valueStack, undefinedVar);
+    return INTERPRET_OK;
+}
+
+static uint8_t patch_jump(){
+    code++;
+    int jumpTo = *(code++);
+    Value a = popValue(valueStack);
+    if(falsy(&a)){
+        code += jumpTo;
+        return INTERPRET_OK;
+    }
+    /*printf("jump to - %d\n", *(code + jumpTo));*/
+    return INTERPRET_OK;
+}
+
+static uint8_t jump(){
+    code++;
+    int jumpTo = *(code++);
+    code += jumpTo;
     return INTERPRET_OK;
 }
 
@@ -852,7 +881,6 @@ static uint8_t setLocal(){
 }
 static uint8_t print(){
     Value value = popValue(valueStack);
-    printf("vm_count %d\n", valueStack->count);
     if(!value.type){
         printf("%d\n", value.as.iNumber);
     }else if(value.type == 1){
@@ -915,7 +943,10 @@ FuncOp funcs[] = {
     [OP_TRUE] = op_true,
     [OP_FALSE] = op_false,
     [OP_LEAVE] = leave,
+    [OP_PATCH_JUMP] = patch_jump,
+    [OP_JUMP] = jump,
     [OP_EOF] = eof
+
 
 };
 
@@ -924,5 +955,4 @@ void interpret(VM *vm){
     
     while(funcs[*code](vm->valueStack) == INTERPRET_OK){
     }
-    printf("vm count-%d\n", valueStack->count);
 }

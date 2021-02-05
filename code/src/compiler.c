@@ -45,7 +45,8 @@ static int8_t slotChangeFactor[] = {
     [OP_LOCAL_GET] = 1,
     [OP_LOCAL_SET] = 0,
     [OP_UPDATE_LOCAL] = -1,
-    [OP_LEAVE] = 0
+    [OP_LEAVE] = 0,
+    [OP_PATCH_JUMP] = -1,
 };
 
 

@@ -207,6 +207,9 @@ static ParseFun parse[] = {
 void expression(){
     wrongm(TOKEN_SEMICOLON, "expression expected but got ';'");
     while(!m_semi()){
+        if(parse[currentToken.type] == NULL){
+            break;
+        }
         parse[currentToken.type]();
         wrongm(TOKEN_EOF, "; expected but file ended");
     }

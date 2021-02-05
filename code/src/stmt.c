@@ -83,7 +83,6 @@ static void block(){
     scan_into();
     int prevCount = symTable.count;
     int prevSlotNumber = slotNumber;
-    int prevConstsCount = compiledChunk.constants.count;
     /*printf("prevSlotNumber - %d\n", prevSlotNumber);*/
     while(!match(TOKEN_CLOSE_BRACE)){
         wrongm(TOKEN_EOF, "expected '}' but got end of line");
@@ -92,7 +91,6 @@ static void block(){
     // deleting locals from localSymTable
     emit2(OP_LEAVE, prevCount, 0);
     symTable.count = prevCount;
-    compiledChunk.constants.count = prevConstsCount;
     slotNumber = prevSlotNumber;
 
     /*printf("currentSlotNumber - %d\n", slotNumber);*/
@@ -100,9 +98,32 @@ static void block(){
     scan_into();
 }
 
+static void ifStatement(){
+    scan_into();
+    matchr(TOKEN_OPEN_PAREN, "(");
+    expression();
+    emit2(OP_PATCH_JUMP,0xff, 1);
+    int jumpCode = compiledChunk.vmCode.count-1;
+    matchr(TOKEN_OPEN_BRACE, "{");
+    block();
+    if(match(TOKEN_ELSE)){
+        scan_into();
+        emit2(OP_JUMP, 0xff, 1);
+        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+        jumpCode = compiledChunk.vmCode.count - 1;
+        block();
+        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+    }else{
+        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+    }
+}
+
 static void call_statement(){
 
     switch(currentToken.type){
+        case TOKEN_IF:
+            ifStatement();
+            break;
         case TOKEN_OPEN_BRACE:
             scopeDepth++;
             block();
@@ -122,6 +143,7 @@ static void call_statement(){
              matchsr(TOKEN_SEMICOLON, ";");
              break;
         default:
+             printf("error : %d\n", currentToken.value.number);
              error();
              break;
     }

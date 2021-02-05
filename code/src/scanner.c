@@ -91,6 +91,10 @@ static Token scanIdentifier(){
     }
     
     switch (*start) {
+        case 'e':
+            return keywordOrIdent(1, 3, start, "lse", TOKEN_ELSE);
+        case 'i':
+            return keywordOrIdent(1, 1, start, "f", TOKEN_IF);
         case 'f':
             return keywordOrIdent(1, 4, start, "alse", TOKEN_FALSE);
         case 'l':
