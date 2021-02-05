@@ -136,7 +136,11 @@ static void identifier(){
     int index = getSymbol(&symTable, scopeDepth > -1 ? -1 : 1,
             currentToken.value.string, currentToken.length);
     if(index < 0){
-        printf("Undeclared identifier\n");
+        char *name = malloc(currentToken.length + 1);
+        memcpy(name, currentToken.value.string, currentToken.length);
+        name[currentToken.length] = '\0';
+        printf("Undeclared identifier: %s at %d\n", name, currentToken.line);
+        free(name);
         exit(1);
     }
     scan_into();

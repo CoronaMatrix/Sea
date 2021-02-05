@@ -18,6 +18,9 @@ static int isAlpha(char c){
 
 static int escape(){
     char c = *source;
+    if(c == '\n'){
+        lineNumber++;
+    }
         
     return c == ' ' || c == '\n';
 }
@@ -103,6 +106,8 @@ static Token scanIdentifier(){
             return keywordOrIdent(1, 4, start, "rint", TOKEN_PRINT);
         case 't':
             return keywordOrIdent(1, 3, start, "rue", TOKEN_TRUE);
+        case 'w':
+            return keywordOrIdent(1, 4, start, "hile", TOKEN_WHILE);
     };
 
     Token token = {

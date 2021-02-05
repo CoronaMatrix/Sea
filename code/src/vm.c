@@ -86,6 +86,10 @@ static void debugVmCode(){
                 i++;
                 printf("jump to %d, ", *(code+i));
                 break;
+            case OP_GOTO:
+                i++;
+                printf("go to %d, ", *(code+i));
+                break;
             default:
                 printf("default, %d, ", *(code + i));
                 
@@ -168,12 +172,20 @@ static uint8_t nil(){
     return INTERPRET_OK;
 }
 
+static uint8_t op_goto(){
+    code++;
+    int gotoCode = *(code++);
+    code = &(compiledChunk.vmCode.values[gotoCode]);
+    return INTERPRET_OK;
+
+}
+
 static uint8_t patch_jump(){
     code++;
     int jumpTo = *(code++);
     Value a = popValue(valueStack);
     if(falsy(&a)){
-        code += jumpTo;
+        code = &(compiledChunk.vmCode.values[jumpTo]);
         return INTERPRET_OK;
     }
     /*printf("jump to - %d\n", *(code + jumpTo));*/
@@ -184,6 +196,7 @@ static uint8_t jump(){
     code++;
     int jumpTo = *(code++);
     code += jumpTo;
+    printf("code %d\n", *code);
     return INTERPRET_OK;
 }
 
@@ -944,6 +957,7 @@ FuncOp funcs[] = {
     [OP_FALSE] = op_false,
     [OP_LEAVE] = leave,
     [OP_PATCH_JUMP] = patch_jump,
+    [OP_GOTO] = op_goto,
     [OP_JUMP] = jump,
     [OP_EOF] = eof
 

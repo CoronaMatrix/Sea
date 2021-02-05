@@ -98,23 +98,39 @@ static void block(){
     scan_into();
 }
 
+static void whileStatement(){
+
+    scan_into();
+    matchr(TOKEN_OPEN_PAREN, "(");
+    int gotoCode = compiledChunk.vmCode.count;
+    printf("goto- %d\n", gotoCode);
+    expression();
+    emit2(OP_PATCH_JUMP, 0xff, 1);
+    int jumpCode = compiledChunk.vmCode.count - 1;
+    matchr(TOKEN_OPEN_BRACE, "{");
+    block();
+    emit2(OP_GOTO, gotoCode, 1);
+    compiledChunk.vmCode.values[jumpCode] = (compiledChunk.vmCode.count);
+
+}
+
 static void ifStatement(){
     scan_into();
     matchr(TOKEN_OPEN_PAREN, "(");
     expression();
     emit2(OP_PATCH_JUMP,0xff, 1);
-    int jumpCode = compiledChunk.vmCode.count-1;
+    int jumpCode = compiledChunk.vmCode.count - 1;
     matchr(TOKEN_OPEN_BRACE, "{");
     block();
     if(match(TOKEN_ELSE)){
         scan_into();
         emit2(OP_JUMP, 0xff, 1);
-        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+        compiledChunk.vmCode.values[jumpCode] = (compiledChunk.vmCode.count);
         jumpCode = compiledChunk.vmCode.count - 1;
         block();
-        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+        compiledChunk.vmCode.values[jumpCode] = (compiledChunk.vmCode.count);
     }else{
-        compiledChunk.vmCode.values[jumpCode] = ((compiledChunk.vmCode.count - 1) - jumpCode);
+        compiledChunk.vmCode.values[jumpCode] = (compiledChunk.vmCode.count);
     }
 }
 
@@ -123,6 +139,9 @@ static void call_statement(){
     switch(currentToken.type){
         case TOKEN_IF:
             ifStatement();
+            break;
+        case TOKEN_WHILE:
+            whileStatement();
             break;
         case TOKEN_OPEN_BRACE:
             scopeDepth++;

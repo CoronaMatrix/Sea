@@ -1,19 +1,12 @@
-let percentage = 40;
+let upto = 0;
 
-if(percentage > 30){
-    if(percentage == 30){
-        print 30;
-    }else{
-        if(percentage == 40){
-            print 40;
-        }else{
-            if(percentage == 50){
-                print 50;
-            }else{
-                print 60;
-            }
-        }
+let fibPrev = 1;
+let fibNext = 1;
+while(upto <= 30){
+    if(upto > 1){
+        fibNext = fibPrev + fibNext;
+        fibPrev = fibNext;
     }
-}else{
-    print 20;
+    print fibNext;
+    upto = upto+1;
 }
