@@ -2,7 +2,7 @@ let upto = 0;
 
 let fibPrev = 1;
 let fibNext = 1;
-while(upto <= 30){
+while(upto <= 40){
     if(upto > 1){
         fibNext = fibPrev + fibNext;
         fibPrev = fibNext;

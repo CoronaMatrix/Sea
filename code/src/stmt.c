@@ -162,7 +162,7 @@ static void call_statement(){
              matchsr(TOKEN_SEMICOLON, ";");
              break;
         default:
-             printf("error : %d\n", currentToken.value.number);
+             printf("error : %ld\n", currentToken.value.number);
              error();
              break;
     }

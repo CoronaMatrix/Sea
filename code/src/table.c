@@ -128,7 +128,7 @@ void debugTable(Table* table, int printDist){
                 printf("{K: %s, ",entry->key->chars);
                 switch (entry->value.type){
                     case INTEGER:
-                        printf("V: %d}\n", entry->value.as.iNumber);
+                        printf("V: %ld}\n", entry->value.as.iNumber);
                         break;
                     case STRING:
                         printf("V: %s}\n", ((ObjString*)(entry->value.as.obj))->chars);

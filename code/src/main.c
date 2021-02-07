@@ -1,6 +1,7 @@
 //TODO - first complete the full langugage parser and do error recovery
 // TODO - improve hash table implementation
 // TODO - make globals working 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "data.h"
@@ -9,14 +10,17 @@
 #define DEBUG_ON
 
 CompiledChunk compiledChunk;
+
 Token currentToken;
 IntArray opStack;
 IntArray indexes;
 SymbolTable symTable;
  static char* readFile(const char* path){
+     
       printf("%s path--\n", path);
       FILE* file = fopen(path, "rb");
   
+      
       if(file == NULL){
           fprintf(stderr, "Could not open file \"%s\".\n", path);
           exit(74);
@@ -49,7 +53,6 @@ int main(int argc, const char* argv[]){
     char *buffer = readFile(argv[1]);
 
     initVm(&vm, buffer);
-    /*compile(buffer);*/
     interpret(&vm);
     
 

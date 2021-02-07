@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -42,17 +43,17 @@ static Token makeToken(TokenType type, int line, TokenValue value){
 static Token scanNumber(){
 
     int overflow = 0;
-    int result = 0;
+    int64_t result = 0;
 
     char c = *source;
     while(isDigit(c)){
-        if(result > INT_MAX / 10) overflow = 1;
-        else if(result * 10 > (INT_MAX - c + '0')) overflow = 1;
+        if(result > INT64_MAX / 10) overflow = 1;
+        else if(result * 10 > (INT64_MAX - c + '0')) overflow = 1;
         else result = result * 10 + c - '0';
         c = *(++source);
     }
     TokenValue value;
-    if(overflow) value.number = INT_MAX;
+    if(overflow) value.number = INT64_MAX;
     else value.number = result;
     Token token = {
         TOKEN_INTEGER, lineNumber,0, value

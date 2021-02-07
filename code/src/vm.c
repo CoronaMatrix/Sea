@@ -895,7 +895,7 @@ static uint8_t setLocal(){
 static uint8_t print(){
     Value value = popValue(valueStack);
     if(!value.type){
-        printf("%d\n", value.as.iNumber);
+        printf("%ld\n", value.as.iNumber);
     }else if(value.type == 1){
         printf("%s\n", value.as.iNumber == 0 ? "false" : "true");
     }else if(value.type == 2){

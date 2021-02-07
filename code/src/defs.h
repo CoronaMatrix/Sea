@@ -3,6 +3,7 @@
 #ifndef SEA_DEFS_H
 #define SEA_DEFS_H
 #include <bits/stdint-uintn.h>
+#include <stdint.h>
 
 typedef enum{
     OBJ_STRING
@@ -34,7 +35,7 @@ typedef struct{
     ValueType type;
     union{
         float fNumber;
-        int iNumber;
+        int64_t iNumber;
         Obj* obj;
     }as;
 } Value;
@@ -129,7 +130,7 @@ typedef enum{
 
 typedef union{
 
-    int number;
+    int64_t number;
     const char* string;
 
 } TokenValue;
