@@ -1,5 +1,4 @@
-# Sea Programming language (will resume development after I write a c compiler, a nes emulator, and lua vm (so that I better understand grammars and parsing and computer architecture(mainly language). And I hate the current syntax (stolen from javascript))
-I know no one interested. Just for me.
+# Sea Programming language (not fully implemented)
 
 #Scopes
 ```
